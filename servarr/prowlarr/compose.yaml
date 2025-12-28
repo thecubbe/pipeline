@@ -1,0 +1,15 @@
+services:
+  prowlarr:
+    image: linuxserver/prowlarr:latest
+    container_name: prowlarr
+   # network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Vienna
+    volumes:
+      - ${ARR_DIR}/prowlarr/config:/config
+    restart: unless-stopped
+    depends_on:
+      gluetun:
+        condition: service_healthy
