@@ -1,7 +1,7 @@
 services:
   postgres:
-    image: postgres:16
-    container_name: n8n_postgres
+    image: postgres:${POSTGRES_IMAGE:-16}
+    container_name: ${POSTGRES_CNTNR:-n8n_postgres}
     restart: always
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -16,8 +16,8 @@ services:
       retries: 10
 
   redis:
-    image: redis:7-alpine
-    container_name: n8n_redis
+    image: redis:${REDIS_IMAGE:-7-alpine}
+    container_name: ${REDIS_CNTNR:-n8n_redis}
     restart: always
     volumes:
       - ${N8N_DIR}/data/redis:/data
@@ -28,8 +28,8 @@ services:
       retries: 10
 
   n8n:
-    image: n8nio/n8n:2.0.0
-    container_name: n8n
+    image: n8nio/n8n:${N8N_IMAGE:-2.0.0}
+    container_name: ${N8N_CNTNR:-n8n}
     restart: always
     ports:
       - "5678:5678"
@@ -76,8 +76,8 @@ services:
         condition: service_healthy
         
   n8n-worker:
-    image: n8nio/n8n:2.0.0
-    container_name: n8n_worker
+    image: n8nio/n8n:${N8N_IMAGE:-2.0.0}
+    container_name: ${N8N_WORKER_CNTNR:-n8n_worker}
     restart: always
     command: worker
     environment:
@@ -103,8 +103,8 @@ services:
         condition: service_healthy
 
   n8n-runners-main:
-    image: n8nio/runners:2.0.0
-    container_name: n8n_runners-main
+    image: n8nio/runners:${RUNNERS_IMAGE:-2.0.0}
+    container_name: ${N8N_RUNNERS_MAIN_CNTNR:-n8n_runners-main}
     restart: always
     environment:
       N8N_RUNNERS_TASK_BROKER_URI: "http://n8n:5679"
@@ -113,8 +113,8 @@ services:
       - n8n
 
   n8n-runners-worker:
-    image: n8nio/runners:2.0.0
-    container_name: n8n_runners-worker
+    image: n8nio/runners:${RUNNERS_IMAGE:-2.0.0}
+    container_name: ${N8N_RUNNERS_WORKER_CNTNR:-n8n_runners-worker}
     restart: always
     environment:
       N8N_RUNNERS_TASK_BROKER_URI: "http://n8n-worker:5679"
