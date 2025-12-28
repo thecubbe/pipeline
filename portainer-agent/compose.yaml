@@ -1,6 +1,6 @@
 services:
   portainer-agent:
-    image: portainer/agent:2.33.1
+    image: portainer/agent:${TAG:-2.33.1}
     container_name: portainer-agent
     restart: always
     ports:
