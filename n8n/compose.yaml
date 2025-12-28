@@ -41,6 +41,7 @@ services:
       N8N_HOST: ${N8N_HOST}
       N8N_PORT: 5678
       N8N_PROTOCOL: "https"
+      N8N_EDITOR_BASE_URL: ${EDITOR_URL}
       WEBHOOK_URL: ${WEBHOOK_URL}
       N8N_PROXY_HOPS: 1
       GENERIC_TIMEZONE: "Europe/Vienna"
