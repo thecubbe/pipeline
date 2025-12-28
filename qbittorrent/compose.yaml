@@ -1,21 +1,22 @@
 services:
   qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent
-    container_name: qbittorrent
-    restart: always
-   # network_mode: "service:gluetun"
+    image: lscr.io/linuxserver/qbittorrent:${TAG:-5.1.4}
+    container_name: ${CNTNR:-qbittorrent}
+    restart: unless-stopped
+    ports:
+      - ${WEBUI_PORT:-8080}:8080
+      - ${TCP_PORT:-6881}:6881
+      - ${UDP_PORT:-6881}:6881/udp
     environment:
       - PUID=1000
       - PGID=1000
       - TZ=Europe/Vienna
-      - WEBUI_PORT=8085
+      - WEBUI_PORT=8080
+      - TORRENTING_PORT=6881
     deploy:
       resources:
         limits:
-          memory: 4096M
+          memory: ${MEMORY_LIMIT:-4096M}
     volumes:
-      - ${ARR_DIR}/qbittorrent/config:/config
-      - ${MNT_DIR}/data/torrents:/data/torrents
-    depends_on:
-      gluetun:
-        condition: service_healthy
+      - ${ARR_DIR:-/home/administrator/}/qbittorrent/config:/config
+      - ${MNT_DIR:-/home/administrator/downloads}/data/torrents:/data/torrents
