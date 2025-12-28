@@ -1,0 +1,16 @@
+services:
+  sonarr:
+    image: linuxserver/sonarr:latest
+    container_name: sonarr
+   # network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Vienna
+    volumes:
+      - ${ARR_DIR}/sonarr/config:/config
+      - ${MNT_DIR}/data:/data
+    restart: unless-stopped
+    depends_on:
+      gluetun:
+        condition: service_healthy
