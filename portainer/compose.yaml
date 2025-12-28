@@ -1,0 +1,16 @@
+services:
+  portainer:
+    image: portainer/portainer-ce:2.33.1
+    container_name: portainer
+    ports:
+      - 9443:9443
+    volumes:
+      - /home/administrator/pipeline/portainer/portainer_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    restart: always
+    networks:
+      portainer_network:
+
+networks:
+  portainer_network:
+    external: true
