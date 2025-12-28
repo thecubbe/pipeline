@@ -8,7 +8,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
     volumes:
-      - ${N8N_DIR}/data/postgres:/var/lib/postgresql/data
+      - ${N8N_DIR:-/home/administrator/n8n}/data/postgres:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 5s
@@ -20,7 +20,7 @@ services:
     container_name: ${REDIS_CNTNR:-n8n_redis}
     restart: always
     volumes:
-      - ${N8N_DIR}/data/redis:/data
+      - ${N8N_DIR:-/home/administrator/n8n}/data/redis:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
@@ -32,7 +32,7 @@ services:
     container_name: ${N8N_CNTNR:-n8n}
     restart: always
     ports:
-      - "5678:5678"
+      - "${HOST_PORT:-5678}:5678"
     environment:
       NODE_ENV: "production"
       N8N_DIAGNOSTICS_ENABLED: "false"
@@ -66,9 +66,9 @@ services:
       # N8N_RESTRICT_FILE_ACCESS_TO: "/home/node"
     volumes:
       # n8n internal data (config, encryption key, etc.)
-      - ${N8N_DIR}/data/n8n:/home/node/.n8n
+      - ${N8N_DIR:-/home/administrator/n8n}/data/n8n:/home/node/.n8n
       # file sandbox path (2.0 default)
-      - ${N8N_DIR}/local-files:/home/node/.n8n-files
+      - ${N8N_DIR:-/home/administrator/n8n}/local-files:/home/node/.n8n-files
     depends_on:
       postgres:
         condition: service_healthy
