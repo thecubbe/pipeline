@@ -1,0 +1,16 @@
+services:
+  radarr:
+    image: linuxserver/radarr:latest
+    container_name: radarr
+   # network_mode: "service:gluetun"
+    environment:
+      - PUID=1000
+      - PGID=1000
+      - TZ=Europe/Vienna
+    volumes:
+      - ${ARR_DIR}/radarr/config:/config
+      - ${MNT_DIR}/data:/data
+    restart: unless-stopped
+    depends_on:
+      gluetun:
+        condition: service_healthy
