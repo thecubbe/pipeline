@@ -11,12 +11,12 @@ services:
       - ${DIR:-/home/ubuntu/dockhand}/postgres_data:/var/lib/postgresql/data
 
   dockhand:
-    image: fnsys/dockhand:${TAG:-latest}
+    image: fnsys/dockhand:${TAG:-v1.0.24}
     container_name: ${CNTNR:-dockhand}
     ports:
       - ${HOST_PORT:-3000}:3000
     environment:
-      DATABASE_URL: postgres://dockhand:changeme@postgres:5432/dockhand
+      DATABASE_URL: postgres://dockhand:${POSTGRES_PASSWORD}@postgres:5432/dockhand
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${DIR:-/home/ubuntu/dockhand}/dockhand_data:/app/data
