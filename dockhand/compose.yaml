@@ -1,27 +1,25 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    image: postgres:${DB_TAG:-16-alpine}
+    container_name: ${DB_CNTNR:-dockhand-postgres}
     restart: unless-stopped
     environment:
-      POSTGRES_USER: dockhand
-      POSTGRES_PASSWORD: changeme
-      POSTGRES_DB: dockhand
+      POSTGRES_USER: ${POSTGRES_USER:-dockhand}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-dockhand}
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - ${DIR:-/home/ubuntu/dockhand}/postgres_data:/var/lib/postgresql/data
 
   dockhand:
-    image: fnsys/dockhand:latest
+    image: fnsys/dockhand:${TAG:-latest}
+    container_name: ${CNTNR:-dockhand}
     ports:
-      - 3000:3000
+      - ${HOST_PORT:-3000}:3000
     environment:
       DATABASE_URL: postgres://dockhand:changeme@postgres:5432/dockhand
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - dockhand_data:/app/data
+      - ${DIR:-/home/ubuntu/dockhand}/dockhand_data:/app/data
     depends_on:
       - postgres
     restart: unless-stopped
-
-volumes:
-  postgres_data:
-  dockhand_data:
