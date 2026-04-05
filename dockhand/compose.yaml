@@ -9,17 +9,31 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-dockhand}
     volumes:
       - ${DIR:-/home/ubuntu/dockhand}/postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dockhand}"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - dockhand
 
   dockhand:
     image: fnsys/dockhand:${TAG:-v1.0.24}
     container_name: ${CNTNR:-dockhand}
+    restart: unless-stopped
     ports:
       - ${HOST_PORT:-3000}:3000
     environment:
-      DATABASE_URL: postgres://dockhand:${POSTGRES_PASSWORD}@postgres:5432/dockhand
+      DATABASE_URL: postgres://${POSTGRES_USER:-dockhand}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-dockhand}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${DIR:-/home/ubuntu/dockhand}/dockhand_data:/app/data
     depends_on:
-      - postgres
-    restart: unless-stopped
+      postgres:
+        condition: service_healthy
+    networks:
+      - dockhand
+
+networks:
+  dockhand:
+    external: true
