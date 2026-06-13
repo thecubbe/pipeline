@@ -235,10 +235,10 @@ services:
       PORT: 5055
       DB_TYPE: ${SEERR_DB_TYPE:-postgres}
       DB_HOST: ${SEERR_DB_HOST:-localhost}
-      DB_PORT: ${SEERR_DB_HOST:-localhost}
-      DB_USER: ${SEERR_DB_HOST:-localhost}
+      DB_PORT: ${SEERR_DB_PORT:-localhost}
+      DB_USER: ${SEERR_DB_USER:-localhost}
       DB_PASS: ${SEERR_DB_PASS:-localhost}
-      DB_NAME: ${SEERR_DB_NAME:-localhost}
+      DB_NAME: ${SSEERR_DB}
       DB_POOL_SIZE: "10"
       DB_LOG_QUERIES: "false"
     init: true
