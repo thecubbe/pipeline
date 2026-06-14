@@ -11,10 +11,6 @@ x-postgres: &postgres
     timeout: 5s
     retries: 10
     start_period: 10s
-  configs:
-    - source: pg_init_extra_dbs
-      target: /docker-entrypoint-initdb.d/10-extra-dbs.sh
-      mode: 0555
 
 x-arr: &arr
   restart: unless-stopped
@@ -38,7 +34,6 @@ services:
       <<: *postgres_env
       POSTGRES_USER: ${RADARR_DB_USER:-radarr}
       POSTGRES_DB: ${RADARR_DB_MAIN:-radarr-main}
-      POSTGRES_EXTRA_DBS: ${RADARR_DB_LOG:-radarr-log}
     healthcheck:
       <<: *postgres_health
       test: ["CMD-SHELL", "pg_isready -U ${RADARR_DB_USER:-radarr} -d ${RADARR_DB_MAIN:-radarr-main}"]
@@ -54,7 +49,6 @@ services:
       <<: *postgres_env
       POSTGRES_USER: ${SONARR_DB_USER:-sonarr}
       POSTGRES_DB: ${SONARR_DB_MAIN:-sonarr-main}
-      POSTGRES_EXTRA_DBS: ${SONARR_DB_LOG:-sonarr-log}
     healthcheck:
       <<: *postgres_health
       test: ["CMD-SHELL", "pg_isready -U ${SONARR_DB_USER:-sonarr} -d ${SONARR_DB_MAIN:-sonarr-main}"]
@@ -70,7 +64,6 @@ services:
       <<: *postgres_env
       POSTGRES_USER: ${PROWLARR_DB_USER:-prowlarr}
       POSTGRES_DB: ${PROWLARR_DB_MAIN:-prowlarr-main}
-      POSTGRES_EXTRA_DBS: ${PROWLARR_DB_LOG:-prowlarr-log}
     healthcheck:
       <<: *postgres_health
       test: ["CMD-SHELL", "pg_isready -U ${PROWLARR_DB_USER:-prowlarr} -d ${PROWLARR_DB_MAIN:-prowlarr-main}"]
@@ -105,9 +98,6 @@ services:
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     volumes:
       - pgadmin_data:/var/lib/pgadmin
-    configs:
-      - source: pgadmin_servers
-        target: /pgadmin4/servers.json
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:80/misc/ping"]
       interval: 30s
@@ -298,27 +288,3 @@ networks:
 
 volumes:
   pgadmin_data:
-
-configs:
-  pg_init_extra_dbs:
-    content: |
-      #!/bin/sh
-      (
-        set -eu
-        if [ -n "$${POSTGRES_EXTRA_DBS:-}" ]; then
-          for db in $$(echo "$$POSTGRES_EXTRA_DBS" | tr ',' ' '); do
-            psql -v ON_ERROR_STOP=1 --username "$$POSTGRES_USER" --dbname "$$POSTGRES_DB" \
-              -c "CREATE DATABASE \"$$db\" OWNER \"$$POSTGRES_USER\";"
-          done
-        fi
-      )
-  pgadmin_servers:
-    content: |
-      {
-        "Servers": {
-          "1": {"Name": "Radarr",   "Group": "Servarr", "Host": "${RADARR_DB_CNTNR:-radarr-db}",     "Port": 5432, "Username": "${RADARR_DB_USER:-radarr}",     "MaintenanceDB": "${RADARR_DB_MAIN:-radarr-main}",     "SSLMode": "prefer"},
-          "2": {"Name": "Sonarr",   "Group": "Servarr", "Host": "${SONARR_DB_CNTNR:-sonarr-db}",     "Port": 5432, "Username": "${SONARR_DB_USER:-sonarr}",     "MaintenanceDB": "${SONARR_DB_MAIN:-sonarr-main}",     "SSLMode": "prefer"},
-          "3": {"Name": "Prowlarr", "Group": "Servarr", "Host": "${PROWLARR_DB_CNTNR:-prowlarr-db}", "Port": 5432, "Username": "${PROWLARR_DB_USER:-prowlarr}", "MaintenanceDB": "${PROWLARR_DB_MAIN:-prowlarr-main}", "SSLMode": "prefer"},
-          "4": {"Name": "Seerr",    "Group": "Servarr", "Host": "${SEERR_DB_CNTNR:-seerr-db}",       "Port": 5432, "Username": "${SEERR_DB_USER:-seerr}",       "MaintenanceDB": "${SEERR_DB:-seerr}",                 "SSLMode": "prefer"}
-        }
-      }
