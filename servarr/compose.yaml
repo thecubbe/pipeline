@@ -1,6 +1,7 @@
 x-postgres: &postgres
-  image: postgres:${POSTGRES_TAG-16}
+  image: postgres:${POSTGRES_TAG:-16}
   restart: always
+  shm_size: 128mb
   networks:
     - servarr
   environment: &postgres_env
@@ -9,126 +10,128 @@ x-postgres: &postgres
     interval: 5s
     timeout: 5s
     retries: 10
+    start_period: 10s
+  configs:
+    - source: pg_init_extra_dbs
+      target: /docker-entrypoint-initdb.d/10-extra-dbs.sh
+      mode: 0555
 
 x-arr: &arr
   restart: unless-stopped
   networks:
     - servarr
   environment: &arr_env
-    - PUID=1000
-    - PGID=1000
-    - TZ=${TZ}
+    PUID: ${PUID:-1000}
+    PGID: ${PGID:-1000}
+    TZ: ${TZ}
+
+x-svc: &svc
+  restart: unless-stopped
+  networks:
+    - servarr
 
 services:
   radarr_db:
     <<: *postgres
     container_name: ${RADARR_DB_CNTNR:-radarr-db}
-    ports:
-      - "${RADARR_DB_PORT:-5431}:5432/tcp"
     environment:
       <<: *postgres_env
-      POSTGRES_DB: ${RADARR_DB}
-      POSTGRES_USER: ${RADARR_DB_USER}
+      POSTGRES_USER: ${RADARR_DB_USER:-radarr}
+      POSTGRES_DB: ${RADARR_DB_MAIN:-radarr-main}
+      POSTGRES_EXTRA_DBS: ${RADARR_DB_LOG:-radarr-log}
     healthcheck:
       <<: *postgres_health
-      test: ["CMD-SHELL", "pg_isready -U ${RADARR_DB_USER} -d ${RADARR_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${RADARR_DB_USER:-radarr} -d ${RADARR_DB_MAIN:-radarr-main}"]
+    ports:
+      - "${RADARR_DB_PORT:-5432}:5432/tcp"
     volumes:
       - ${CNFG_DIR:-/home/administrator}/radarr_db:/var/lib/postgresql/data
-
-  radarr_db_log:
-    <<: *postgres
-    container_name: ${RADARR_DB_CNTNR_LOG:-radarr-db-log}
-    ports:
-      - "${RADARR_DB_PORT_LOG:-5432}:5432/tcp"
-    environment:
-      <<: *postgres_env
-      POSTGRES_DB: ${RADARR_DB_LOG}
-      POSTGRES_USER: ${RADARR_DB_USER}
-    healthcheck:
-      <<: *postgres_health
-      test: ["CMD-SHELL", "pg_isready -U ${RADARR_DB_USER} -d ${RADARR_DB_LOG}"]
-    volumes:
-      - ${CNFG_DIR:-/home/administrator}/radarr_db_log:/var/lib/postgresql/data
 
   sonarr_db:
     <<: *postgres
     container_name: ${SONARR_DB_CNTNR:-sonarr-db}
-    ports:
-      - "${SONARR_DB_PORT:-5433}:5432/tcp"
     environment:
       <<: *postgres_env
-      POSTGRES_DB: ${SONARR_DB}
-      POSTGRES_USER: ${SONARR_DB_USER}
+      POSTGRES_USER: ${SONARR_DB_USER:-sonarr}
+      POSTGRES_DB: ${SONARR_DB_MAIN:-sonarr-main}
+      POSTGRES_EXTRA_DBS: ${SONARR_DB_LOG:-sonarr-log}
     healthcheck:
       <<: *postgres_health
-      test: ["CMD-SHELL", "pg_isready -U ${SONARR_DB_USER} -d ${SONARR_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${SONARR_DB_USER:-sonarr} -d ${SONARR_DB_MAIN:-sonarr-main}"]
+    ports:
+      - "${SONARR_DB_PORT:-5433}:5432/tcp"
     volumes:
       - ${CNFG_DIR:-/home/administrator}/sonarr_db:/var/lib/postgresql/data
 
-  sonarr_db_log:
+  prowlarr_db:
     <<: *postgres
-    container_name: ${SONARR_DB_CNTNR_LOG:-sonarr-db-log}
-    ports:
-      - "${SONARR_DB_PORT_LOG:-5434}:5432/tcp"
+    container_name: ${PROWLARR_DB_CNTNR:-prowlarr-db}
     environment:
       <<: *postgres_env
-      POSTGRES_DB: ${SONARR_DB_LOG}
-      POSTGRES_USER: ${SONARR_DB_USER}
+      POSTGRES_USER: ${PROWLARR_DB_USER:-prowlarr}
+      POSTGRES_DB: ${PROWLARR_DB_MAIN:-prowlarr-main}
+      POSTGRES_EXTRA_DBS: ${PROWLARR_DB_LOG:-prowlarr-log}
     healthcheck:
       <<: *postgres_health
-      test: ["CMD-SHELL", "pg_isready -U ${SONARR_DB_USER} -d ${SONARR_DB_LOG}"]
+      test: ["CMD-SHELL", "pg_isready -U ${PROWLARR_DB_USER:-prowlarr} -d ${PROWLARR_DB_MAIN:-prowlarr-main}"]
+    ports:
+      - "${PROWLARR_DB_PORT:-5434}:5432/tcp"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/sonarr_db_log:/var/lib/postgresql/data
+      - ${CNFG_DIR:-/home/administrator}/prowlarr_db:/var/lib/postgresql/data
 
-  sseerr_db:
+  seerr_db:
     <<: *postgres
-    container_name: ${SSEERR_DB_CNTNR:-sseerr-db}
-    ports:
-      - "${SSEERR_DB_PORT:-5435}:5432/tcp"
+    container_name: ${SEERR_DB_CNTNR:-seerr-db}
     environment:
       <<: *postgres_env
-      POSTGRES_DB: ${SSEERR_DB}
-      POSTGRES_USER: ${SSEERR_DB_USER}
+      POSTGRES_USER: ${SEERR_DB_USER:-seerr}
+      POSTGRES_DB: ${SEERR_DB:-seerr}
     healthcheck:
       <<: *postgres_health
-      test: ["CMD-SHELL", "pg_isready -U ${SSEERR_DB_USER} -d ${SONARR_DB}"]
+      test: ["CMD-SHELL", "pg_isready -U ${SEERR_DB_USER:-seerr} -d ${SEERR_DB:-seerr}"]
+    ports:
+      - "${SEERR_DB_PORT:-5435}:5432/tcp"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/sseerr_db:/var/lib/postgresql/data
+      - ${CNFG_DIR:-/home/administrator}/seerr_db:/var/lib/postgresql/data
 
   pgadmin:
-    <<: *arr
+    <<: *svc
+    image: dpage/pgadmin4:${PGADMIN_TAG:-9.15}
     container_name: ${PGADMIN_CNTNR:-pgadmin}
-    image: dpage/pgadmin4:${PGADMIN_TAG:-latest}
     ports:
       - "${PGADMIN_PORT:-5050}:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
-      # PGADMIN_CONFIG_SERVER_MODE: false
-      # PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: false
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/pgadmin/servers.json:/pgadmin4/servers.json
+      - pgadmin_data:/var/lib/pgadmin
+    configs:
+      - source: pgadmin_servers
+        target: /pgadmin4/servers.json
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/misc/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     depends_on:
       radarr_db:
         condition: service_healthy
-      radarr_db_log:
-        condition: service_healthy
       sonarr_db:
         condition: service_healthy
-      sonarr_db_log:
+      prowlarr_db:
         condition: service_healthy
-      sseerr_db:
+      seerr_db:
         condition: service_healthy
 
   qbittorrent:
     <<: *arr
     image: lscr.io/linuxserver/qbittorrent:${QBITTORRENT_TAG:-5.1.4}
     container_name: ${QBITTORRENT_CNTNR:-qbittorrent}
-    restart: unless-stopped
     ports:
-      - ${QB_WEBUI_PORT:-8080}:8080
-      - ${QB_TCP_PORT:-6881}:6881
-      - ${QB_UDP_PORT:-6881}:6881/udp
+      - "${QB_WEBUI_PORT:-8080}:8080"
+      - "${QB_TCP_PORT:-6881}:6881"
+      - "${QB_UDP_PORT:-6881}:6881/udp"
     environment:
       <<: *arr_env
       WEBUI_PORT: "8080"
@@ -136,128 +139,186 @@ services:
     volumes:
       - ${CNFG_DIR:-/home/administrator}/qbittorrent/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     deploy:
       resources:
         limits:
           memory: ${QB_MEMORY_LIMIT:-4096M}
 
   qui:
-    <<: *arr
+    <<: *svc
     image: ghcr.io/autobrr/qui:${QUI_TAG:-latest}
     container_name: ${QUI_CNTNR:-qui}
     ports:
-      - ${QUI_PORT:-7476}:7476
+      - "${QUI_PORT:-7476}:7476"
     environment:
-      <<: *arr_env
+      TZ: ${TZ}
+      QUI__HOST: 0.0.0.0
+      QUI__PORT: "7476"
     volumes:
       - ${CNFG_DIR:-/home/administrator}/qui/config:/config
-    depends_on:
-      qbittorrent:
-        condition: service_healthy
 
   flaresolverr:
-    <<: *arr
-    image: flaresolverr/flaresolverr:${FLARESOLVERR_TAG:-latest}
+    <<: *svc
+    image: ${FLARESOLVERR_IMAGE:-flaresolverr/flaresolverr}:${FLARESOLVERR_TAG:-latest}
     container_name: ${FLARESOLVERR_CNTNR:-flaresolverr}
     ports:
-      - ${FLARESOLVERR_PORT:-8191}:8191
+      - "${FLARESOLVERR_PORT:-8191}:8191"
     environment:
       LOG_LEVEL: ${FS_LOG_LEVEL:-info}
       LOG_HTML: ${FS_LOG_HTML:-false}
       CAPTCHA_SOLVER: ${FS_CAPTCHA_SOLVER:-none}
       TZ: ${TZ}
-    volumes:
-      - ${CNFG_DIR:-/home/administrator}/flaresolverr/config:/config
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8191/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   prowlarr:
     <<: *arr
     image: lscr.io/linuxserver/prowlarr:${PROWLARR_TAG:-latest}
     container_name: ${PROWLARR_CNTNR:-prowlarr}
-    restart: unless-stopped
     ports:
-      - ${PROWLARR_PORT:-9696}:9696
+      - "${PROWLARR_PORT:-9696}:9696"
     environment:
       <<: *arr_env
+      PROWLARR__POSTGRES__HOST: ${PROWLARR_DB_CNTNR:-prowlarr-db}
+      PROWLARR__POSTGRES__PORT: "5432"
+      PROWLARR__POSTGRES__USER: ${PROWLARR_DB_USER:-prowlarr}
+      PROWLARR__POSTGRES__PASSWORD: ${POSTGRES_PASSWORD}
+      PROWLARR__POSTGRES__MAINDB: ${PROWLARR_DB_MAIN:-prowlarr-main}
+      PROWLARR__POSTGRES__LOGDB: ${PROWLARR_DB_LOG:-prowlarr-log}
     volumes:
       - ${CNFG_DIR:-/home/administrator}/prowlarr/config:/config
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9696/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     depends_on:
-      flaresolverr:
+      prowlarr_db:
         condition: service_healthy
 
   radarr:
     <<: *arr
-    image: linuxserver/radarr:${RADARR_TAG:-latest}
+    image: lscr.io/linuxserver/radarr:${RADARR_TAG:-latest}
     container_name: ${RADARR_CNTNR:-radarr}
-    restart: unless-stopped
     ports:
-      - ${RADARR_PORT:-7878}:7878
+      - "${RADARR_PORT:-7878}:7878"
     environment:
       <<: *arr_env
+      RADARR__POSTGRES__HOST: ${RADARR_DB_CNTNR:-radarr-db}
+      RADARR__POSTGRES__PORT: "5432"
+      RADARR__POSTGRES__USER: ${RADARR_DB_USER:-radarr}
+      RADARR__POSTGRES__PASSWORD: ${POSTGRES_PASSWORD}
+      RADARR__POSTGRES__MAINDB: ${RADARR_DB_MAIN:-radarr-main}
+      RADARR__POSTGRES__LOGDB: ${RADARR_DB_LOG:-radarr-log}
     volumes:
       - ${CNFG_DIR:-/home/administrator}/radarr/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7878/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     depends_on:
-      pgadmin:
-        condition: service_healthy
-      qbittorrent:
-        condition: service_healthy
-      prowlarr:
+      radarr_db:
         condition: service_healthy
 
   sonarr:
     <<: *arr
-    image: linuxserver/sonarr:${SONARR_TAG:-latest}
+    image: lscr.io/linuxserver/sonarr:${SONARR_TAG:-latest}
     container_name: ${SONARR_CNTNR:-sonarr}
     ports:
-      - ${SONARR_PORT:-8989}:8989
+      - "${SONARR_PORT:-8989}:8989"
     environment:
       <<: *arr_env
+      SONARR__POSTGRES__HOST: ${SONARR_DB_CNTNR:-sonarr-db}
+      SONARR__POSTGRES__PORT: "5432"
+      SONARR__POSTGRES__USER: ${SONARR_DB_USER:-sonarr}
+      SONARR__POSTGRES__PASSWORD: ${POSTGRES_PASSWORD}
+      SONARR__POSTGRES__MAINDB: ${SONARR_DB_MAIN:-sonarr-main}
+      SONARR__POSTGRES__LOGDB: ${SONARR_DB_LOG:-sonarr-log}
     volumes:
       - ${CNFG_DIR:-/home/administrator}/sonarr/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8989/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
     depends_on:
-      pgadmin:
-        condition: service_healthy
-      qbittorrent:
-        condition: service_healthy
-      prowlarr:
+      sonarr_db:
         condition: service_healthy
 
   seerr:
-    <<: *arr
+    <<: *svc
     image: ghcr.io/seerr-team/seerr:${SEERR_TAG:-latest}
     container_name: ${SEERR_CNTNR:-seerr}
+    init: true
     ports:
-      - ${SEERR_PORT:-5055}:5055
+      - "${SEERR_PORT:-5055}:5055"
     environment:
-      LOG_LEVEL: ${SR_LOG_LEVEL:-debug}
+      LOG_LEVEL: ${SR_LOG_LEVEL:-info}
       TZ: ${TZ}
-      PORT: 5055
-      DB_TYPE: ${SEERR_DB_TYPE:-postgres}
-      DB_HOST: ${SEERR_DB_HOST:-localhost}
-      DB_PORT: ${SEERR_DB_PORT:-localhost}
-      DB_USER: ${SEERR_DB_USER:-localhost}
-      DB_PASS: ${SEERR_DB_PASS:-localhost}
-      DB_NAME: ${SSEERR_DB}
+      PORT: "5055"
+      DB_TYPE: postgres
+      DB_HOST: ${SEERR_DB_CNTNR:-seerr-db}
+      DB_PORT: "5432"
+      DB_USER: ${SEERR_DB_USER:-seerr}
+      DB_PASS: ${POSTGRES_PASSWORD}
+      DB_NAME: ${SEERR_DB:-seerr}
       DB_POOL_SIZE: "10"
       DB_LOG_QUERIES: "false"
-    init: true
     volumes:
       - ${CNFG_DIR:-/home/administrator}/seerr/config:/app/config
     healthcheck:
-      test: wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1
-      start_period: 20s
-      timeout: 3s
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1"]
       interval: 15s
+      timeout: 3s
       retries: 3
+      start_period: 20s
     depends_on:
       seerr_db:
-        condition: service_healthy
-      radarr:
-        condition: service_healthy
-      sonarr:
         condition: service_healthy
 
 networks:
   servarr:
     external: true
+
+volumes:
+  pgadmin_data:
+
+configs:
+  pg_init_extra_dbs:
+    content: |
+      #!/bin/sh
+      (
+        set -eu
+        if [ -n "$${POSTGRES_EXTRA_DBS:-}" ]; then
+          for db in $$(echo "$$POSTGRES_EXTRA_DBS" | tr ',' ' '); do
+            psql -v ON_ERROR_STOP=1 --username "$$POSTGRES_USER" --dbname "$$POSTGRES_DB" \
+              -c "CREATE DATABASE \"$$db\" OWNER \"$$POSTGRES_USER\";"
+          done
+        fi
+      )
+  pgadmin_servers:
+    content: |
+      {
+        "Servers": {
+          "1": {"Name": "Radarr",   "Group": "Servarr", "Host": "${RADARR_DB_CNTNR:-radarr-db}",     "Port": 5432, "Username": "${RADARR_DB_USER:-radarr}",     "MaintenanceDB": "${RADARR_DB_MAIN:-radarr-main}",     "SSLMode": "prefer"},
+          "2": {"Name": "Sonarr",   "Group": "Servarr", "Host": "${SONARR_DB_CNTNR:-sonarr-db}",     "Port": 5432, "Username": "${SONARR_DB_USER:-sonarr}",     "MaintenanceDB": "${SONARR_DB_MAIN:-sonarr-main}",     "SSLMode": "prefer"},
+          "3": {"Name": "Prowlarr", "Group": "Servarr", "Host": "${PROWLARR_DB_CNTNR:-prowlarr-db}", "Port": 5432, "Username": "${PROWLARR_DB_USER:-prowlarr}", "MaintenanceDB": "${PROWLARR_DB_MAIN:-prowlarr-main}", "SSLMode": "prefer"},
+          "4": {"Name": "Seerr",    "Group": "Servarr", "Host": "${SEERR_DB_CNTNR:-seerr-db}",       "Port": 5432, "Username": "${SEERR_DB_USER:-seerr}",       "MaintenanceDB": "${SEERR_DB:-seerr}",                 "SSLMode": "prefer"}
+        }
+      }
