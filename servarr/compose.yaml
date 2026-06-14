@@ -37,7 +37,11 @@ services:
       POSTGRES_EXTRA_DBS: ${RADARR_DB_LOG:-radarr-log}
     healthcheck:
       <<: *postgres_health
-      test: ["CMD-SHELL", "pg_isready -U ${RADARR_DB_USER:-radarr} -d ${RADARR_DB_MAIN:-radarr-main}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${RADARR_DB_USER:-radarr} -d ${RADARR_DB_MAIN:-radarr-main}",
+        ]
     ports:
       - "${RADARR_DB_PORT:-5432}:5432/tcp"
     volumes:
@@ -54,7 +58,11 @@ services:
       POSTGRES_EXTRA_DBS: ${SONARR_DB_LOG:-sonarr-log}
     healthcheck:
       <<: *postgres_health
-      test: ["CMD-SHELL", "pg_isready -U ${SONARR_DB_USER:-sonarr} -d ${SONARR_DB_MAIN:-sonarr-main}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${SONARR_DB_USER:-sonarr} -d ${SONARR_DB_MAIN:-sonarr-main}",
+        ]
     ports:
       - "${SONARR_DB_PORT:-5433}:5432/tcp"
     volumes:
@@ -71,7 +79,11 @@ services:
       POSTGRES_EXTRA_DBS: ${PROWLARR_DB_LOG:-prowlarr-log}
     healthcheck:
       <<: *postgres_health
-      test: ["CMD-SHELL", "pg_isready -U ${PROWLARR_DB_USER:-prowlarr} -d ${PROWLARR_DB_MAIN:-prowlarr-main}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${PROWLARR_DB_USER:-prowlarr} -d ${PROWLARR_DB_MAIN:-prowlarr-main}",
+        ]
     ports:
       - "${PROWLARR_DB_PORT:-5434}:5432/tcp"
     volumes:
@@ -87,7 +99,11 @@ services:
       POSTGRES_DB: ${SEERR_DB:-seerr}
     healthcheck:
       <<: *postgres_health
-      test: ["CMD-SHELL", "pg_isready -U ${SEERR_DB_USER:-seerr} -d ${SEERR_DB:-seerr}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${SEERR_DB_USER:-seerr} -d ${SEERR_DB:-seerr}",
+        ]
     ports:
       - "${SEERR_DB_PORT:-5435}:5432/tcp"
     volumes:
@@ -100,7 +116,7 @@ services:
     ports:
       - "${PGADMIN_PORT:-5050}:80"
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     volumes:
       - ${CNFG_DIR:-/home/administrator}/pgadmin/data:/var/lib/pgadmin
@@ -162,7 +178,7 @@ services:
 
   flaresolverr:
     <<: *svc
-    image: ${FLARESOLVERR_IMAGE:-flaresolverr/flaresolverr}:${FLARESOLVERR_TAG:-latest}
+    image: flaresolverr/flaresolverr:${FLARESOLVERR_TAG:-v3.5.0}
     container_name: ${FLARESOLVERR_CNTNR:-flaresolverr}
     ports:
       - "${FLARESOLVERR_PORT:-8191}:8191"
@@ -180,7 +196,7 @@ services:
 
   prowlarr:
     <<: *arr
-    image: lscr.io/linuxserver/prowlarr:${PROWLARR_TAG:-latest}
+    image: lscr.io/linuxserver/prowlarr:${PROWLARR_TAG:-2.4.0}
     container_name: ${PROWLARR_CNTNR:-prowlarr}
     ports:
       - "${PROWLARR_PORT:-9696}:9696"
@@ -206,7 +222,7 @@ services:
 
   radarr:
     <<: *arr
-    image: lscr.io/linuxserver/radarr:${RADARR_TAG:-latest}
+    image: lscr.io/linuxserver/radarr:${RADARR_TAG:-6.2.1}
     container_name: ${RADARR_CNTNR:-radarr}
     ports:
       - "${RADARR_PORT:-7878}:7878"
@@ -233,7 +249,7 @@ services:
 
   sonarr:
     <<: *arr
-    image: lscr.io/linuxserver/sonarr:${SONARR_TAG:-latest}
+    image: lscr.io/linuxserver/sonarr:${SONARR_TAG:-4.0.17}
     container_name: ${SONARR_CNTNR:-sonarr}
     ports:
       - "${SONARR_PORT:-8989}:8989"
@@ -260,7 +276,7 @@ services:
 
   seerr:
     <<: *svc
-    image: ghcr.io/seerr-team/seerr:${SEERR_TAG:-latest}
+    image: ghcr.io/seerr-team/seerr:${SEERR_TAG:-v3.3.0}
     container_name: ${SEERR_CNTNR:-seerr}
     init: true
     ports:
@@ -280,7 +296,11 @@ services:
     volumes:
       - ${CNFG_DIR:-/home/administrator}/seerr/config:/app/config
     healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:5055/api/v1/settings/public || exit 1",
+        ]
       interval: 15s
       timeout: 3s
       retries: 3
