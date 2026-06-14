@@ -34,12 +34,14 @@ services:
       <<: *postgres_env
       POSTGRES_USER: ${RADARR_DB_USER:-radarr}
       POSTGRES_DB: ${RADARR_DB_MAIN:-radarr-main}
+      POSTGRES_EXTRA_DBS: ${RADARR_DB_LOG:-radarr-log}
     healthcheck:
       <<: *postgres_health
       test: ["CMD-SHELL", "pg_isready -U ${RADARR_DB_USER:-radarr} -d ${RADARR_DB_MAIN:-radarr-main}"]
     ports:
       - "${RADARR_DB_PORT:-5432}:5432/tcp"
     volumes:
+      - ${CNFG_DIR:-/home/administrator}/postgres/init-extra-dbs.sh:/docker-entrypoint-initdb.d/10-extra-dbs.sh:ro
       - ${CNFG_DIR:-/home/administrator}/radarr_db:/var/lib/postgresql/data
 
   sonarr_db:
@@ -49,12 +51,14 @@ services:
       <<: *postgres_env
       POSTGRES_USER: ${SONARR_DB_USER:-sonarr}
       POSTGRES_DB: ${SONARR_DB_MAIN:-sonarr-main}
+      POSTGRES_EXTRA_DBS: ${SONARR_DB_LOG:-sonarr-log}
     healthcheck:
       <<: *postgres_health
       test: ["CMD-SHELL", "pg_isready -U ${SONARR_DB_USER:-sonarr} -d ${SONARR_DB_MAIN:-sonarr-main}"]
     ports:
       - "${SONARR_DB_PORT:-5433}:5432/tcp"
     volumes:
+      - ${CNFG_DIR:-/home/administrator}/postgres/init-extra-dbs.sh:/docker-entrypoint-initdb.d/10-extra-dbs.sh:ro
       - ${CNFG_DIR:-/home/administrator}/sonarr_db:/var/lib/postgresql/data
 
   prowlarr_db:
@@ -64,12 +68,14 @@ services:
       <<: *postgres_env
       POSTGRES_USER: ${PROWLARR_DB_USER:-prowlarr}
       POSTGRES_DB: ${PROWLARR_DB_MAIN:-prowlarr-main}
+      POSTGRES_EXTRA_DBS: ${PROWLARR_DB_LOG:-prowlarr-log}
     healthcheck:
       <<: *postgres_health
       test: ["CMD-SHELL", "pg_isready -U ${PROWLARR_DB_USER:-prowlarr} -d ${PROWLARR_DB_MAIN:-prowlarr-main}"]
     ports:
       - "${PROWLARR_DB_PORT:-5434}:5432/tcp"
     volumes:
+      - ${CNFG_DIR:-/home/administrator}/postgres/init-extra-dbs.sh:/docker-entrypoint-initdb.d/10-extra-dbs.sh:ro
       - ${CNFG_DIR:-/home/administrator}/prowlarr_db:/var/lib/postgresql/data
 
   seerr_db:
@@ -97,7 +103,8 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@example.com}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      - ${CNFG_DIR:-/home/administrator}/pgadmin/data:/var/lib/pgadmin
+      - ${CNFG_DIR:-/home/administrator}/pgadmin/servers.json:/pgadmin4/servers.json:ro
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:80/misc/ping"]
       interval: 30s
@@ -285,6 +292,3 @@ services:
 networks:
   servarr:
     external: true
-
-volumes:
-  pgadmin_data:
