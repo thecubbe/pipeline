@@ -14,6 +14,6 @@ services:
     volumes:
       - ${CNFG_DIR}/config:/config
       - ${TRANSCODE_DIR}/transcode:/transcode
-      - ${MNT_DIR}/PlexMedia/data/media/tv:/tv
-      - ${MNT_DIR}/PlexMedia/data/media/movies:/movies
+      - ${MNT_DIR}/data/media/tv:/tv
+      - ${MNT_DIR}/data/media/movies:/movies
     restart: unless-stopped
