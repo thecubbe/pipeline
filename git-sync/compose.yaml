@@ -21,4 +21,4 @@ services:
       - ${TARGET_DIR}/data:/git
       - ${GITSYNC_DIR}/sparse-checkout:/etc/git-sync/sparse-checkout:ro
       - ${GITSYNC_DIR}/${SCRIPT}.sh:/scripts/${SCRIPT}.sh:ro
-    user: "1000:988"
+    user: "1000:${DOCKER_GID}"
