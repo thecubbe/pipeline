@@ -111,7 +111,7 @@ services:
 
   pgadmin:
     <<: *svc
-    image: dpage/pgadmin4:${PGADMIN_TAG:-9.15}
+    image: dpage/pgadmin4:${PGADMIN_TAG:-9.16}
     container_name: ${PGADMIN_CNTNR:-pgadmin}
     ports:
       - "${PGADMIN_PORT:-5050}:80"
