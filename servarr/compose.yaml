@@ -1,7 +1,23 @@
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+x-health: &health
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 30s
+
 x-postgres: &postgres
+  <<: *logging
   image: postgres:${POSTGRES_TAG:-16}
   restart: always
   shm_size: 128mb
+  security_opt:
+    - "no-new-privileges:true"
   networks:
     - servarr
   environment: &postgres_env
@@ -17,12 +33,21 @@ x-arr-env: &arr_env
   PGID: ${PGID:-1000}
   TZ: ${TZ}
 
-x-svc: &svc
+x-arr: &arr
+  <<: *logging
   restart: unless-stopped
+  network_mode: "service:vpn-arr"
+
+x-svc: &svc
+  <<: *logging
+  restart: unless-stopped
+  security_opt:
+    - "no-new-privileges:true"
   networks:
     - servarr
 
 x-vpn: &vpn
+  <<: *logging
   image: qmcgaw/gluetun:${VPN_TAG:-v3.40}
   cap_add:
     - NET_ADMIN
@@ -35,6 +60,7 @@ x-vpn: &vpn
     OPENVPN_USER: ${OPENVPN_USER}
     OPENVPN_PASSWORD: ${OPENVPN_PASSWORD}
     OPENVPN_PROTOCOL: udp
+    HEALTH_VPN_DURATION_INITIAL: 30s
     TZ: ${TZ}
 
 x-vpn-pf: &vpn_pf
@@ -46,6 +72,7 @@ x-vpn-pf: &vpn_pf
   VPN_PORT_FORWARDING_DOWN_COMMAND: "/bin/sh -c 'wget -O- -nv --post-data \"json={\\\"listen_port\\\":0}\" http://127.0.0.1:8080/api/v2/app/setPreferences'"
 
 x-qbit: &qbit
+  <<: *logging
   image: lscr.io/linuxserver/qbittorrent:${QBITTORRENT_TAG:-5.1.4}
   restart: unless-stopped
   environment:
@@ -54,11 +81,8 @@ x-qbit: &qbit
     TZ: ${TZ}
     WEBUI_PORT: "8080"
   healthcheck:
+    <<: *health
     test: ["CMD", "curl", "-f", "http://localhost:8080"]
-    interval: 30s
-    timeout: 10s
-    retries: 3
-    start_period: 30s
 
 services:
   radarr_db:
@@ -77,7 +101,7 @@ services:
           "pg_isready -U ${RADARR_DB_USER:-radarr} -d ${RADARR_DB_MAIN:-radarr-main}",
         ]
     ports:
-      - "${RADARR_DB_PORT:-5432}:5432/tcp"
+      - "127.0.0.1:${RADARR_DB_PORT:-5432}:5432/tcp"
     volumes:
       - ${CNFG_DIR:-/home/administrator}/postgres/init-extra-dbs.sh:/docker-entrypoint-initdb.d/10-extra-dbs.sh:ro
       - ${CNFG_DIR:-/home/administrator}/radarr_db:/var/lib/postgresql/data
@@ -98,7 +122,7 @@ services:
           "pg_isready -U ${SONARR_DB_USER:-sonarr} -d ${SONARR_DB_MAIN:-sonarr-main}",
         ]
     ports:
-      - "${SONARR_DB_PORT:-5433}:5432/tcp"
+      - "127.0.0.1:${SONARR_DB_PORT:-5433}:5432/tcp"
     volumes:
       - ${CNFG_DIR:-/home/administrator}/postgres/init-extra-dbs.sh:/docker-entrypoint-initdb.d/10-extra-dbs.sh:ro
       - ${CNFG_DIR:-/home/administrator}/sonarr_db:/var/lib/postgresql/data
@@ -119,7 +143,7 @@ services:
           "pg_isready -U ${PROWLARR_DB_USER:-prowlarr} -d ${PROWLARR_DB_MAIN:-prowlarr-main}",
         ]
     ports:
-      - "${PROWLARR_DB_PORT:-5434}:5432/tcp"
+      - "127.0.0.1:${PROWLARR_DB_PORT:-5434}:5432/tcp"
     volumes:
       - ${CNFG_DIR:-/home/administrator}/postgres/init-extra-dbs.sh:/docker-entrypoint-initdb.d/10-extra-dbs.sh:ro
       - ${CNFG_DIR:-/home/administrator}/prowlarr_db:/var/lib/postgresql/data
@@ -139,7 +163,7 @@ services:
           "pg_isready -U ${SEERR_DB_USER:-seerr} -d ${SEERR_DB:-seerr}",
         ]
     ports:
-      - "${SEERR_DB_PORT:-5435}:5432/tcp"
+      - "127.0.0.1:${SEERR_DB_PORT:-5435}:5432/tcp"
     volumes:
       - ${CNFG_DIR:-/home/administrator}/seerr_db:/var/lib/postgresql/data
 
@@ -156,10 +180,8 @@ services:
       - ${CNFG_DIR:-/home/administrator}/pgadmin/data:/var/lib/pgadmin
       - ${CNFG_DIR:-/home/administrator}/pgadmin/servers.json:/pgadmin4/servers.json:ro
     healthcheck:
+      <<: *health
       test: ["CMD", "wget", "-qO-", "http://localhost:80/misc/ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
       start_period: 40s
     depends_on:
       radarr_db:
@@ -222,7 +244,7 @@ services:
       <<: *vpn_env
       SERVER_REGIONS: Austria
       DNS_KEEP_NAMESERVER: "on"
-      FIREWALL_OUTBOUND_SUBNETS: ${DOCKER_SUBNET}
+      FIREWALL_OUTBOUND_SUBNETS: ${DOCKER_SUBNET:-172.18.0.0/16}
     ports:
       - "${RADARR_PORT:-7878}:7878"
       - "${SONARR_PORT:-8989}:8989"
@@ -296,24 +318,21 @@ services:
     image: flaresolverr/flaresolverr:${FLARESOLVERR_TAG:-v3.5.0}
     container_name: ${FLARESOLVERR_CNTNR:-flaresolverr}
     ports:
-      - "${FLARESOLVERR_PORT:-8191}:8191"
+      - "127.0.0.1:${FLARESOLVERR_PORT:-8191}:8191"
     environment:
       LOG_LEVEL: ${FS_LOG_LEVEL:-info}
       LOG_HTML: ${FS_LOG_HTML:-false}
       CAPTCHA_SOLVER: ${FS_CAPTCHA_SOLVER:-none}
       TZ: ${TZ}
     healthcheck:
+      <<: *health
       test: ["CMD", "curl", "-f", "http://localhost:8191/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
       start_period: 60s
 
   prowlarr:
+    <<: *arr
     image: lscr.io/linuxserver/prowlarr:${PROWLARR_TAG:-2.4.0}
     container_name: ${PROWLARR_CNTNR:-prowlarr}
-    restart: unless-stopped
-    network_mode: "service:vpn-arr"
     environment:
       <<: *arr_env
       PROWLARR__POSTGRES__HOST: ${PROWLARR_DB_CNTNR:-prowlarr-db}
@@ -325,11 +344,8 @@ services:
     volumes:
       - ${CNFG_DIR:-/home/administrator}/prowlarr/config:/config
     healthcheck:
+      <<: *health
       test: ["CMD", "curl", "-f", "http://localhost:9696/ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
     depends_on:
       prowlarr_db:
         condition: service_healthy
@@ -337,10 +353,9 @@ services:
         condition: service_healthy
 
   radarr:
+    <<: *arr
     image: lscr.io/linuxserver/radarr:${RADARR_TAG:-6.2.1}
     container_name: ${RADARR_CNTNR:-radarr}
-    restart: unless-stopped
-    network_mode: "service:vpn-arr"
     environment:
       <<: *arr_env
       RADARR__POSTGRES__HOST: ${RADARR_DB_CNTNR:-radarr-db}
@@ -353,11 +368,8 @@ services:
       - ${CNFG_DIR:-/home/administrator}/radarr/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}:/data
     healthcheck:
+      <<: *health
       test: ["CMD", "curl", "-f", "http://localhost:7878/ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
     depends_on:
       radarr_db:
         condition: service_healthy
@@ -365,10 +377,9 @@ services:
         condition: service_healthy
 
   sonarr:
+    <<: *arr
     image: lscr.io/linuxserver/sonarr:${SONARR_TAG:-4.0.17}
     container_name: ${SONARR_CNTNR:-sonarr}
-    restart: unless-stopped
-    network_mode: "service:vpn-arr"
     environment:
       <<: *arr_env
       SONARR__POSTGRES__HOST: ${SONARR_DB_CNTNR:-sonarr-db}
@@ -381,11 +392,8 @@ services:
       - ${CNFG_DIR:-/home/administrator}/sonarr/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}:/data
     healthcheck:
+      <<: *health
       test: ["CMD", "curl", "-f", "http://localhost:8989/ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
     depends_on:
       sonarr_db:
         condition: service_healthy
