@@ -198,7 +198,7 @@ services:
     container_name: ${VPN_ALPHA_CNTNR:-vpn-alpha}
     environment:
       <<: [*vpn_env, *vpn_pf]
-      SERVER_REGIONS: Austria,Czech Republic
+      SERVER_REGIONS: ${VPN_ALPHA_REGIONS:-Austria,Czech Republic}
     ports:
       - "${QBIT_ALPHA_WEBUI_PORT:-8081}:8080"
     volumes:
@@ -209,7 +209,7 @@ services:
     container_name: ${VPN_BRAVO_CNTNR:-vpn-bravo}
     environment:
       <<: [*vpn_env, *vpn_pf]
-      SERVER_REGIONS: Hungary,Switzerland
+      SERVER_REGIONS: ${VPN_BRAVO_REGIONS:-Hungary,Switzerland}
     ports:
       - "${QBIT_BRAVO_WEBUI_PORT:-8082}:8080"
     volumes:
@@ -220,7 +220,7 @@ services:
     container_name: ${VPN_CHARLIE_CNTNR:-vpn-charlie}
     environment:
       <<: [*vpn_env, *vpn_pf]
-      SERVER_REGIONS: DE Frankfurt,IT Milano
+      SERVER_REGIONS: ${VPN_CHARLIE_REGIONS:-DE Frankfurt,IT Milano}
     ports:
       - "${QBIT_CHARLIE_WEBUI_PORT:-8083}:8080"
     volumes:
@@ -231,7 +231,7 @@ services:
     container_name: ${VPN_DELTA_CNTNR:-vpn-delta}
     environment:
       <<: [*vpn_env, *vpn_pf]
-      SERVER_REGIONS: Croatia,France
+      SERVER_REGIONS: ${VPN_DELTA_REGIONS:-Croatia,France}
     ports:
       - "${QBIT_DELTA_WEBUI_PORT:-8084}:8080"
     volumes:
@@ -242,7 +242,7 @@ services:
     container_name: ${VPN_ARR_CNTNR:-vpn-arr}
     environment:
       <<: *vpn_env
-      SERVER_REGIONS: Austria
+      SERVER_REGIONS: ${VPN_ARR_REGIONS:-Austria}
       DNS_KEEP_NAMESERVER: "on"
       FIREWALL_OUTBOUND_SUBNETS: ${DOCKER_SUBNET:-172.18.0.0/16}
     ports:
