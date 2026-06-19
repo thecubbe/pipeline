@@ -339,6 +339,7 @@ services:
     container_name: ${PROWLARR_CNTNR:-prowlarr}
     environment:
       <<: *arr_env
+      PROWLARR__AUTH__APIKEY: ${PROWLARR_API_KEY}
       PROWLARR__POSTGRES__HOST: ${PROWLARR_DB_CNTNR:-prowlarr-db}
       PROWLARR__POSTGRES__PORT: "5432"
       PROWLARR__POSTGRES__USER: ${PROWLARR_DB_USER:-prowlarr}
@@ -363,6 +364,7 @@ services:
     container_name: ${RADARR_CNTNR:-radarr}
     environment:
       <<: *arr_env
+      RADARR__AUTH__APIKEY: ${RADARR_API_KEY}
       RADARR__POSTGRES__HOST: ${RADARR_DB_CNTNR:-radarr-db}
       RADARR__POSTGRES__PORT: "5432"
       RADARR__POSTGRES__USER: ${RADARR_DB_USER:-radarr}
@@ -388,6 +390,7 @@ services:
     container_name: ${SONARR_CNTNR:-sonarr}
     environment:
       <<: *arr_env
+      SONARR__AUTH__APIKEY: ${SONARR_API_KEY}
       SONARR__POSTGRES__HOST: ${SONARR_DB_CNTNR:-sonarr-db}
       SONARR__POSTGRES__PORT: "5432"
       SONARR__POSTGRES__USER: ${SONARR_DB_USER:-sonarr}
