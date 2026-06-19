@@ -266,6 +266,7 @@ services:
     depends_on:
       vpn-alpha:
         condition: service_healthy
+        restart: true
 
   qbit-bravo:
     <<: *qbit
@@ -277,6 +278,7 @@ services:
     depends_on:
       vpn-bravo:
         condition: service_healthy
+        restart: true
 
   qbit-charlie:
     <<: *qbit
@@ -288,6 +290,7 @@ services:
     depends_on:
       vpn-charlie:
         condition: service_healthy
+        restart: true
 
   qbit-delta:
     <<: *qbit
@@ -299,6 +302,7 @@ services:
     depends_on:
       vpn-delta:
         condition: service_healthy
+        restart: true
 
   qui:
     <<: *svc
@@ -351,6 +355,7 @@ services:
         condition: service_healthy
       vpn-arr:
         condition: service_healthy
+        restart: true
 
   radarr:
     <<: *arr
@@ -375,6 +380,7 @@ services:
         condition: service_healthy
       vpn-arr:
         condition: service_healthy
+        restart: true
 
   sonarr:
     <<: *arr
@@ -399,6 +405,7 @@ services:
         condition: service_healthy
       vpn-arr:
         condition: service_healthy
+        restart: true
 
   seerr:
     <<: *svc
