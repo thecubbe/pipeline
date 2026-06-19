@@ -103,8 +103,8 @@ services:
     ports:
       - "127.0.0.1:${RADARR_DB_PORT:-5432}:5432/tcp"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/postgres/init-extra-dbs.sh:/docker-entrypoint-initdb.d/10-extra-dbs.sh:ro
-      - ${CNFG_DIR:-/home/administrator}/radarr_db:/var/lib/postgresql/data
+      - ${CNFG_DIR:-/home/administrator/servarr}/postgres/init-extra-dbs.sh:/docker-entrypoint-initdb.d/10-extra-dbs.sh:ro
+      - ${CNFG_DIR:-/home/administrator/servarr}/radarr_db:/var/lib/postgresql/data
 
   sonarr_db:
     <<: *postgres
@@ -124,8 +124,8 @@ services:
     ports:
       - "127.0.0.1:${SONARR_DB_PORT:-5433}:5432/tcp"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/postgres/init-extra-dbs.sh:/docker-entrypoint-initdb.d/10-extra-dbs.sh:ro
-      - ${CNFG_DIR:-/home/administrator}/sonarr_db:/var/lib/postgresql/data
+      - ${CNFG_DIR:-/home/administrator/servarr}/postgres/init-extra-dbs.sh:/docker-entrypoint-initdb.d/10-extra-dbs.sh:ro
+      - ${CNFG_DIR:-/home/administrator/servarr}/sonarr_db:/var/lib/postgresql/data
 
   prowlarr_db:
     <<: *postgres
@@ -145,8 +145,8 @@ services:
     ports:
       - "127.0.0.1:${PROWLARR_DB_PORT:-5434}:5432/tcp"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/postgres/init-extra-dbs.sh:/docker-entrypoint-initdb.d/10-extra-dbs.sh:ro
-      - ${CNFG_DIR:-/home/administrator}/prowlarr_db:/var/lib/postgresql/data
+      - ${CNFG_DIR:-/home/administrator/servarr}/postgres/init-extra-dbs.sh:/docker-entrypoint-initdb.d/10-extra-dbs.sh:ro
+      - ${CNFG_DIR:-/home/administrator/servarr}/prowlarr_db:/var/lib/postgresql/data
 
   seerr_db:
     <<: *postgres
@@ -165,7 +165,7 @@ services:
     ports:
       - "127.0.0.1:${SEERR_DB_PORT:-5435}:5432/tcp"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/seerr_db:/var/lib/postgresql/data
+      - ${CNFG_DIR:-/home/administrator/servarr}/seerr_db:/var/lib/postgresql/data
 
   pgadmin:
     <<: *svc
@@ -177,8 +177,8 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD}
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/pgadmin/data:/var/lib/pgadmin
-      - ${CNFG_DIR:-/home/administrator}/pgadmin/servers.json:/pgadmin4/servers.json:ro
+      - ${CNFG_DIR:-/home/administrator/servarr}/pgadmin/data:/var/lib/pgadmin
+      - ${CNFG_DIR:-/home/administrator/servarr}/pgadmin/servers.json:/pgadmin4/servers.json:ro
     healthcheck:
       <<: *health
       test: ["CMD", "wget", "-qO-", "http://localhost:80/misc/ping"]
@@ -202,7 +202,7 @@ services:
     ports:
       - "${QBIT_ALPHA_WEBUI_PORT:-8081}:8080"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/vpn/alpha:/gluetun
+      - ${CNFG_DIR:-/home/administrator/servarr}/vpn/alpha:/gluetun
 
   vpn-bravo:
     <<: *vpn
@@ -213,7 +213,7 @@ services:
     ports:
       - "${QBIT_BRAVO_WEBUI_PORT:-8082}:8080"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/vpn/bravo:/gluetun
+      - ${CNFG_DIR:-/home/administrator/servarr}/vpn/bravo:/gluetun
 
   vpn-charlie:
     <<: *vpn
@@ -224,7 +224,7 @@ services:
     ports:
       - "${QBIT_CHARLIE_WEBUI_PORT:-8083}:8080"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/vpn/charlie:/gluetun
+      - ${CNFG_DIR:-/home/administrator/servarr}/vpn/charlie:/gluetun
 
   vpn-delta:
     <<: *vpn
@@ -235,7 +235,7 @@ services:
     ports:
       - "${QBIT_DELTA_WEBUI_PORT:-8084}:8080"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/vpn/delta:/gluetun
+      - ${CNFG_DIR:-/home/administrator/servarr}/vpn/delta:/gluetun
 
   vpn-arr:
     <<: *vpn
@@ -250,14 +250,14 @@ services:
       - "${SONARR_PORT:-8989}:8989"
       - "${PROWLARR_PORT:-9696}:9696"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/vpn/arr:/gluetun
+      - ${CNFG_DIR:-/home/administrator/servarr}/vpn/arr:/gluetun
 
   qbit-alpha:
     <<: *qbit
     container_name: ${QBIT_ALPHA_CNTNR:-qbit-alpha}
     network_mode: "service:vpn-alpha"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/qbit/alpha/config:/config
+      - ${CNFG_DIR:-/home/administrator/servarr}/qbit/alpha/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
     deploy:
       resources:
@@ -273,7 +273,7 @@ services:
     container_name: ${QBIT_BRAVO_CNTNR:-qbit-bravo}
     network_mode: "service:vpn-bravo"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/qbit/bravo/config:/config
+      - ${CNFG_DIR:-/home/administrator/servarr}/qbit/bravo/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
     depends_on:
       vpn-bravo:
@@ -285,7 +285,7 @@ services:
     container_name: ${QBIT_CHARLIE_CNTNR:-qbit-charlie}
     network_mode: "service:vpn-charlie"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/qbit/charlie/config:/config
+      - ${CNFG_DIR:-/home/administrator/servarr}/qbit/charlie/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
     depends_on:
       vpn-charlie:
@@ -297,7 +297,7 @@ services:
     container_name: ${QBIT_DELTA_CNTNR:-qbit-delta}
     network_mode: "service:vpn-delta"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/qbit/delta/config:/config
+      - ${CNFG_DIR:-/home/administrator/servarr}/qbit/delta/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
     depends_on:
       vpn-delta:
@@ -315,7 +315,7 @@ services:
       QUI__HOST: 0.0.0.0
       QUI__PORT: "7476"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/qui/config:/config
+      - ${CNFG_DIR:-/home/administrator/servarr}/qui/config:/config
 
   flaresolverr:
     <<: *svc
@@ -346,7 +346,7 @@ services:
       PROWLARR__POSTGRES__MAINDB: ${PROWLARR_DB_MAIN:-prowlarr-main}
       PROWLARR__POSTGRES__LOGDB: ${PROWLARR_DB_LOG:-prowlarr-log}
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/prowlarr/config:/config
+      - ${CNFG_DIR:-/home/administrator/servarr}/prowlarr/config:/config
     healthcheck:
       <<: *health
       test: ["CMD", "curl", "-f", "http://localhost:9696/ping"]
@@ -370,7 +370,7 @@ services:
       RADARR__POSTGRES__MAINDB: ${RADARR_DB_MAIN:-radarr-main}
       RADARR__POSTGRES__LOGDB: ${RADARR_DB_LOG:-radarr-log}
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/radarr/config:/config
+      - ${CNFG_DIR:-/home/administrator/servarr}/radarr/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}:/data
     healthcheck:
       <<: *health
@@ -395,7 +395,7 @@ services:
       SONARR__POSTGRES__MAINDB: ${SONARR_DB_MAIN:-sonarr-main}
       SONARR__POSTGRES__LOGDB: ${SONARR_DB_LOG:-sonarr-log}
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/sonarr/config:/config
+      - ${CNFG_DIR:-/home/administrator/servarr}/sonarr/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}:/data
     healthcheck:
       <<: *health
@@ -427,7 +427,7 @@ services:
       DB_POOL_SIZE: "10"
       DB_LOG_QUERIES: "false"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/seerr/config:/app/config
+      - ${CNFG_DIR:-/home/administrator/servarr}/seerr/config:/app/config
     healthcheck:
       test:
         [
