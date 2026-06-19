@@ -235,7 +235,7 @@ services:
     container_name: ${QBIT_ALPHA_CNTNR:-qbit-alpha}
     network_mode: "service:vpn-alpha"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/qbittorrent/config:/config
+      - ${CNFG_DIR:-/home/administrator}/qbit/alpha/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
     deploy:
       resources:
@@ -250,7 +250,7 @@ services:
     container_name: ${QBIT_BRAVO_CNTNR:-qbit-bravo}
     network_mode: "service:vpn-bravo"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/qbittorrent-bravo/config:/config
+      - ${CNFG_DIR:-/home/administrator}/qbit/bravo/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
     depends_on:
       vpn-bravo:
@@ -261,7 +261,7 @@ services:
     container_name: ${QBIT_CHARLIE_CNTNR:-qbit-charlie}
     network_mode: "service:vpn-charlie"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/qbittorrent-charlie/config:/config
+      - ${CNFG_DIR:-/home/administrator}/qbit/charlie/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
     depends_on:
       vpn-charlie:
@@ -272,7 +272,7 @@ services:
     container_name: ${QBIT_DELTA_CNTNR:-qbit-delta}
     network_mode: "service:vpn-delta"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/qbittorrent-delta/config:/config
+      - ${CNFG_DIR:-/home/administrator}/qbit/delta/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
     depends_on:
       vpn-delta:
