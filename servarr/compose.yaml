@@ -143,8 +143,8 @@ services:
     container_name: ${QBITTORRENT_CNTNR:-qbittorrent}
     ports:
       - "${QB_WEBUI_PORT:-8080}:8080"
-      - "${QB_TCP_PORT:-26758}:26758"
-      - "${QB_UDP_PORT:-26758}:26758/udp"
+      - "${QB_TCP_PORT:-26758}:6881"
+      - "${QB_UDP_PORT:-26758}:6881/udp"
     environment:
       <<: *arr_env
       WEBUI_PORT: "8080"
