@@ -12,14 +12,10 @@ x-postgres: &postgres
     retries: 10
     start_period: 10s
 
-x-arr: &arr
-  restart: unless-stopped
-  networks:
-    - servarr
-  environment: &arr_env
-    PUID: ${PUID:-1000}
-    PGID: ${PGID:-1000}
-    TZ: ${TZ}
+x-arr-env: &arr_env
+  PUID: ${PUID:-1000}
+  PGID: ${PGID:-1000}
+  TZ: ${TZ}
 
 x-svc: &svc
   restart: unless-stopped
@@ -175,49 +171,49 @@ services:
       seerr_db:
         condition: service_healthy
 
-  vpn-qbit-1:
+  vpn-alpha:
     <<: *vpn
-    container_name: ${VPN_QBIT1_CNTNR:-vpn-qbit-1}
+    container_name: ${VPN_ALPHA_CNTNR:-vpn-alpha}
     environment:
       <<: [*vpn_env, *vpn_pf]
       SERVER_REGIONS: Austria,Czech Republic
     ports:
-      - "${QBIT1_WEBUI_PORT:-8081}:8080"
+      - "${QBIT_ALPHA_WEBUI_PORT:-8081}:8080"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/vpn/qbit-1:/gluetun
+      - ${CNFG_DIR:-/home/administrator}/vpn/alpha:/gluetun
 
-  vpn-qbit-2:
+  vpn-bravo:
     <<: *vpn
-    container_name: ${VPN_QBIT2_CNTNR:-vpn-qbit-2}
+    container_name: ${VPN_BRAVO_CNTNR:-vpn-bravo}
     environment:
       <<: [*vpn_env, *vpn_pf]
       SERVER_REGIONS: Hungary,Switzerland
     ports:
-      - "${QBIT2_WEBUI_PORT:-8082}:8080"
+      - "${QBIT_BRAVO_WEBUI_PORT:-8082}:8080"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/vpn/qbit-2:/gluetun
+      - ${CNFG_DIR:-/home/administrator}/vpn/bravo:/gluetun
 
-  vpn-qbit-3:
+  vpn-charlie:
     <<: *vpn
-    container_name: ${VPN_QBIT3_CNTNR:-vpn-qbit-3}
+    container_name: ${VPN_CHARLIE_CNTNR:-vpn-charlie}
     environment:
       <<: [*vpn_env, *vpn_pf]
       SERVER_REGIONS: DE Frankfurt,IT Milano
     ports:
-      - "${QBIT3_WEBUI_PORT:-8083}:8080"
+      - "${QBIT_CHARLIE_WEBUI_PORT:-8083}:8080"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/vpn/qbit-3:/gluetun
+      - ${CNFG_DIR:-/home/administrator}/vpn/charlie:/gluetun
 
-  vpn-qbit-4:
+  vpn-delta:
     <<: *vpn
-    container_name: ${VPN_QBIT4_CNTNR:-vpn-qbit-4}
+    container_name: ${VPN_DELTA_CNTNR:-vpn-delta}
     environment:
       <<: [*vpn_env, *vpn_pf]
       SERVER_REGIONS: Croatia,France
     ports:
-      - "${QBIT4_WEBUI_PORT:-8084}:8080"
+      - "${QBIT_DELTA_WEBUI_PORT:-8084}:8080"
     volumes:
-      - ${CNFG_DIR:-/home/administrator}/vpn/qbit-4:/gluetun
+      - ${CNFG_DIR:-/home/administrator}/vpn/delta:/gluetun
 
   vpn-arr:
     <<: *vpn
@@ -234,10 +230,10 @@ services:
     volumes:
       - ${CNFG_DIR:-/home/administrator}/vpn/arr:/gluetun
 
-  alpha:
+  qbit-alpha:
     <<: *qbit
-    container_name: ${QBIT_ALPHA_CNTNR:-alpha}
-    network_mode: "service:vpn-qbit-1"
+    container_name: ${QBIT_ALPHA_CNTNR:-qbit-alpha}
+    network_mode: "service:vpn-alpha"
     volumes:
       - ${CNFG_DIR:-/home/administrator}/qbittorrent/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
@@ -246,40 +242,40 @@ services:
         limits:
           memory: ${QB_MEMORY_LIMIT:-4096M}
     depends_on:
-      vpn-qbit-1:
+      vpn-alpha:
         condition: service_healthy
 
-  bravo:
+  qbit-bravo:
     <<: *qbit
-    container_name: ${QBIT_BRAVO_CNTNR:-bravo}
-    network_mode: "service:vpn-qbit-2"
+    container_name: ${QBIT_BRAVO_CNTNR:-qbit-bravo}
+    network_mode: "service:vpn-bravo"
     volumes:
       - ${CNFG_DIR:-/home/administrator}/qbittorrent-bravo/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
     depends_on:
-      vpn-qbit-2:
+      vpn-bravo:
         condition: service_healthy
 
-  charlie:
+  qbit-charlie:
     <<: *qbit
-    container_name: ${QBIT_CHARLIE_CNTNR:-charlie}
-    network_mode: "service:vpn-qbit-3"
+    container_name: ${QBIT_CHARLIE_CNTNR:-qbit-charlie}
+    network_mode: "service:vpn-charlie"
     volumes:
       - ${CNFG_DIR:-/home/administrator}/qbittorrent-charlie/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
     depends_on:
-      vpn-qbit-3:
+      vpn-charlie:
         condition: service_healthy
 
-  delta:
+  qbit-delta:
     <<: *qbit
-    container_name: ${QBIT_DELTA_CNTNR:-delta}
-    network_mode: "service:vpn-qbit-4"
+    container_name: ${QBIT_DELTA_CNTNR:-qbit-delta}
+    network_mode: "service:vpn-delta"
     volumes:
       - ${CNFG_DIR:-/home/administrator}/qbittorrent-delta/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
     depends_on:
-      vpn-qbit-4:
+      vpn-delta:
         condition: service_healthy
 
   qui:
