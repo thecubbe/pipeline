@@ -26,6 +26,44 @@ x-svc: &svc
   networks:
     - servarr
 
+x-vpn: &vpn
+  image: qmcgaw/gluetun:${VPN_TAG:-v3.40}
+  cap_add:
+    - NET_ADMIN
+  restart: unless-stopped
+  networks:
+    - servarr
+  environment: &vpn_env
+    VPN_SERVICE_PROVIDER: private internet access
+    VPN_TYPE: openvpn
+    OPENVPN_USER: ${OPENVPN_USER}
+    OPENVPN_PASSWORD: ${OPENVPN_PASSWORD}
+    OPENVPN_PROTOCOL: udp
+    TZ: ${TZ}
+
+x-vpn-pf: &vpn_pf
+  VPN_PORT_FORWARDING: "on"
+  PORT_FORWARD_ONLY: "true"
+  DNS_UPSTREAM_RESOLVER_TYPE: plain
+  DNS_UPSTREAM_PLAIN_ADDRESSES: 1.1.1.1:53,9.9.9.9:53
+  VPN_PORT_FORWARDING_UP_COMMAND: "/bin/sh -c 'wget -O- -nv --post-data \"json={\\\"listen_port\\\":{{PORT}},\\\"random_port\\\":false,\\\"upnp\\\":false}\" http://127.0.0.1:8080/api/v2/app/setPreferences'"
+  VPN_PORT_FORWARDING_DOWN_COMMAND: "/bin/sh -c 'wget -O- -nv --post-data \"json={\\\"listen_port\\\":0}\" http://127.0.0.1:8080/api/v2/app/setPreferences'"
+
+x-qbit: &qbit
+  image: lscr.io/linuxserver/qbittorrent:${QBITTORRENT_TAG:-5.1.4}
+  restart: unless-stopped
+  environment:
+    PUID: ${PUID:-1000}
+    PGID: ${PGID:-1000}
+    TZ: ${TZ}
+    WEBUI_PORT: "8080"
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:8080"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+    start_period: 30s
+
 services:
   radarr_db:
     <<: *postgres
@@ -137,31 +175,112 @@ services:
       seerr_db:
         condition: service_healthy
 
-  qbittorrent:
-    <<: *arr
-    image: lscr.io/linuxserver/qbittorrent:${QBITTORRENT_TAG:-5.1.4}
-    container_name: ${QBITTORRENT_CNTNR:-qbittorrent}
-    ports:
-      - "${QB_WEBUI_PORT:-8080}:8080"
-      - "${QB_TCP_PORT:-26758}:6881"
-      - "${QB_UDP_PORT:-26758}:6881/udp"
+  vpn-qbit-1:
+    <<: *vpn
+    container_name: ${VPN_QBIT1_CNTNR:-vpn-qbit-1}
     environment:
-      <<: *arr_env
-      WEBUI_PORT: "8080"
-      TORRENTING_PORT: "6881"
+      <<: [*vpn_env, *vpn_pf]
+      SERVER_REGIONS: Austria,Czech Republic
+    ports:
+      - "${QBIT1_WEBUI_PORT:-8081}:8080"
+    volumes:
+      - ${CNFG_DIR:-/home/administrator}/vpn/qbit-1:/gluetun
+
+  vpn-qbit-2:
+    <<: *vpn
+    container_name: ${VPN_QBIT2_CNTNR:-vpn-qbit-2}
+    environment:
+      <<: [*vpn_env, *vpn_pf]
+      SERVER_REGIONS: Hungary,Switzerland
+    ports:
+      - "${QBIT2_WEBUI_PORT:-8082}:8080"
+    volumes:
+      - ${CNFG_DIR:-/home/administrator}/vpn/qbit-2:/gluetun
+
+  vpn-qbit-3:
+    <<: *vpn
+    container_name: ${VPN_QBIT3_CNTNR:-vpn-qbit-3}
+    environment:
+      <<: [*vpn_env, *vpn_pf]
+      SERVER_REGIONS: DE Frankfurt,IT Milano
+    ports:
+      - "${QBIT3_WEBUI_PORT:-8083}:8080"
+    volumes:
+      - ${CNFG_DIR:-/home/administrator}/vpn/qbit-3:/gluetun
+
+  vpn-qbit-4:
+    <<: *vpn
+    container_name: ${VPN_QBIT4_CNTNR:-vpn-qbit-4}
+    environment:
+      <<: [*vpn_env, *vpn_pf]
+      SERVER_REGIONS: Croatia,France
+    ports:
+      - "${QBIT4_WEBUI_PORT:-8084}:8080"
+    volumes:
+      - ${CNFG_DIR:-/home/administrator}/vpn/qbit-4:/gluetun
+
+  vpn-arr:
+    <<: *vpn
+    container_name: ${VPN_ARR_CNTNR:-vpn-arr}
+    environment:
+      <<: *vpn_env
+      SERVER_REGIONS: Austria
+      DNS_KEEP_NAMESERVER: "on"
+      FIREWALL_OUTBOUND_SUBNETS: ${DOCKER_SUBNET}
+    ports:
+      - "${RADARR_PORT:-7878}:7878"
+      - "${SONARR_PORT:-8989}:8989"
+      - "${PROWLARR_PORT:-9696}:9696"
+    volumes:
+      - ${CNFG_DIR:-/home/administrator}/vpn/arr:/gluetun
+
+  alpha:
+    <<: *qbit
+    container_name: ${QBIT_ALPHA_CNTNR:-alpha}
+    network_mode: "service:vpn-qbit-1"
     volumes:
       - ${CNFG_DIR:-/home/administrator}/qbittorrent/config:/config
       - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
     deploy:
       resources:
         limits:
           memory: ${QB_MEMORY_LIMIT:-4096M}
+    depends_on:
+      vpn-qbit-1:
+        condition: service_healthy
+
+  bravo:
+    <<: *qbit
+    container_name: ${QBIT_BRAVO_CNTNR:-bravo}
+    network_mode: "service:vpn-qbit-2"
+    volumes:
+      - ${CNFG_DIR:-/home/administrator}/qbittorrent-bravo/config:/config
+      - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
+    depends_on:
+      vpn-qbit-2:
+        condition: service_healthy
+
+  charlie:
+    <<: *qbit
+    container_name: ${QBIT_CHARLIE_CNTNR:-charlie}
+    network_mode: "service:vpn-qbit-3"
+    volumes:
+      - ${CNFG_DIR:-/home/administrator}/qbittorrent-charlie/config:/config
+      - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
+    depends_on:
+      vpn-qbit-3:
+        condition: service_healthy
+
+  delta:
+    <<: *qbit
+    container_name: ${QBIT_DELTA_CNTNR:-delta}
+    network_mode: "service:vpn-qbit-4"
+    volumes:
+      - ${CNFG_DIR:-/home/administrator}/qbittorrent-delta/config:/config
+      - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
+    depends_on:
+      vpn-qbit-4:
+        condition: service_healthy
 
   qui:
     <<: *svc
@@ -195,11 +314,10 @@ services:
       start_period: 60s
 
   prowlarr:
-    <<: *arr
     image: lscr.io/linuxserver/prowlarr:${PROWLARR_TAG:-2.4.0}
     container_name: ${PROWLARR_CNTNR:-prowlarr}
-    ports:
-      - "${PROWLARR_PORT:-9696}:9696"
+    restart: unless-stopped
+    network_mode: "service:vpn-arr"
     environment:
       <<: *arr_env
       PROWLARR__POSTGRES__HOST: ${PROWLARR_DB_CNTNR:-prowlarr-db}
@@ -219,13 +337,14 @@ services:
     depends_on:
       prowlarr_db:
         condition: service_healthy
+      vpn-arr:
+        condition: service_healthy
 
   radarr:
-    <<: *arr
     image: lscr.io/linuxserver/radarr:${RADARR_TAG:-6.2.1}
     container_name: ${RADARR_CNTNR:-radarr}
-    ports:
-      - "${RADARR_PORT:-7878}:7878"
+    restart: unless-stopped
+    network_mode: "service:vpn-arr"
     environment:
       <<: *arr_env
       RADARR__POSTGRES__HOST: ${RADARR_DB_CNTNR:-radarr-db}
@@ -246,13 +365,14 @@ services:
     depends_on:
       radarr_db:
         condition: service_healthy
+      vpn-arr:
+        condition: service_healthy
 
   sonarr:
-    <<: *arr
     image: lscr.io/linuxserver/sonarr:${SONARR_TAG:-4.0.17}
     container_name: ${SONARR_CNTNR:-sonarr}
-    ports:
-      - "${SONARR_PORT:-8989}:8989"
+    restart: unless-stopped
+    network_mode: "service:vpn-arr"
     environment:
       <<: *arr_env
       SONARR__POSTGRES__HOST: ${SONARR_DB_CNTNR:-sonarr-db}
@@ -272,6 +392,8 @@ services:
       start_period: 30s
     depends_on:
       sonarr_db:
+        condition: service_healthy
+      vpn-arr:
         condition: service_healthy
 
   seerr:
