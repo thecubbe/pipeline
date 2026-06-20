@@ -200,7 +200,7 @@ services:
     container_name: ${VPN_ALPHA_CNTNR:-vpn-alpha}
     environment:
       <<: [*vpn_env, *vpn_pf]
-      SERVER_REGIONS: ${VPN_ALPHA_REGIONS:-Austria,Czech Republic,Hungary,Switzerland}
+      SERVER_REGIONS: ${VPN_ALPHA_REGIONS:-Austria,France,Croatia}
     ports:
       - "${QBIT_ALPHA_WEBUI_PORT:-8081}:8080"
     volumes:
