@@ -1,0 +1,21 @@
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+services:
+  homarr:
+    <<: *logging
+    image: ghcr.io/homarr-labs/homarr:${HOMARR_TAG:-v1.67.0}
+    container_name: ${HOMARR_CNTNR:-homarr}
+    restart: unless-stopped
+    environment:
+      SECRET_ENCRYPTION_KEY: ${HOMARR_SECRET}
+      TZ: ${TZ}
+    ports:
+      - "${HOMARR_PORT:-7575}:7575"
+    volumes:
+      - ${CNFG_DIR:-/home/administrator/servarr}/appdata:/appdata
+      # - /var/run/docker.sock:/var/run/docker.sock:ro
