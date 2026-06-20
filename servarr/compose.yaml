@@ -206,47 +206,21 @@ services:
     volumes:
       - ${CNFG_DIR:-/home/administrator/servarr}/vpn/alpha:/gluetun
 
-  vpn-bravo:
-    <<: *vpn
-    container_name: ${VPN_BRAVO_CNTNR:-vpn-bravo}
-    environment:
-      <<: [*vpn_env, *vpn_pf]
-      SERVER_REGIONS: ${VPN_BRAVO_REGIONS:-Hungary,Switzerland,France,Croatia}
-    ports:
-      - "${QBIT_BRAVO_WEBUI_PORT:-8082}:8080"
-    volumes:
-      - ${CNFG_DIR:-/home/administrator/servarr}/vpn/bravo:/gluetun
-
-  vpn-charlie:
-    <<: *vpn
-    container_name: ${VPN_CHARLIE_CNTNR:-vpn-charlie}
-    environment:
-      <<: [*vpn_env, *vpn_pf]
-      SERVER_REGIONS: ${VPN_CHARLIE_REGIONS:-DE Frankfurt,IT Milano,Croatia,Austria}
-    ports:
-      - "${QBIT_CHARLIE_WEBUI_PORT:-8083}:8080"
-    volumes:
-      - ${CNFG_DIR:-/home/administrator/servarr}/vpn/charlie:/gluetun
-
-  vpn-delta:
-    <<: *vpn
-    container_name: ${VPN_DELTA_CNTNR:-vpn-delta}
-    environment:
-      <<: [*vpn_env, *vpn_pf]
-      SERVER_REGIONS: ${VPN_DELTA_REGIONS:-Croatia,France,Czech Republic,DE Frankfurt}
-    ports:
-      - "${QBIT_DELTA_WEBUI_PORT:-8084}:8080"
-    volumes:
-      - ${CNFG_DIR:-/home/administrator/servarr}/vpn/delta:/gluetun
-
   vpn-arr:
     <<: *vpn
     container_name: ${VPN_ARR_CNTNR:-vpn-arr}
     environment:
-      <<: *vpn_env
-      SERVER_REGIONS: ${VPN_ARR_REGIONS:-Austria,France,Croatia}
+      VPN_SERVICE_PROVIDER: nordvpn
+      VPN_TYPE: openvpn
+      OPENVPN_USER: ${NORDVPN_USER}
+      OPENVPN_PASSWORD: ${NORDVPN_PASSWORD}
+      OPENVPN_PROTOCOL: ${VPN_PROTOCOL:-tcp}
+      UPDATER_PERIOD: 24h
+      HEALTH_VPN_DURATION_INITIAL: ${HEALTH_VPN_DURATION_INITIAL:-10s}
+      SERVER_COUNTRIES: ${VPN_ARR_COUNTRIES:-Austria}
       DNS_KEEP_NAMESERVER: "on"
       FIREWALL_OUTBOUND_SUBNETS: ${DOCKER_SUBNET:-172.18.0.0/16}
+      TZ: ${TZ}
     ports:
       - "${RADARR_PORT:-7878}:7878"
       - "${SONARR_PORT:-8989}:8989"
@@ -267,42 +241,6 @@ services:
           memory: ${QB_MEMORY_LIMIT:-4096M}
     depends_on:
       vpn-alpha:
-        condition: service_healthy
-        restart: true
-
-  qbit-bravo:
-    <<: *qbit
-    container_name: ${QBIT_BRAVO_CNTNR:-qbit-bravo}
-    network_mode: "service:vpn-bravo"
-    volumes:
-      - ${CNFG_DIR:-/home/administrator/servarr}/qbit/bravo/config:/config
-      - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
-    depends_on:
-      vpn-bravo:
-        condition: service_healthy
-        restart: true
-
-  qbit-charlie:
-    <<: *qbit
-    container_name: ${QBIT_CHARLIE_CNTNR:-qbit-charlie}
-    network_mode: "service:vpn-charlie"
-    volumes:
-      - ${CNFG_DIR:-/home/administrator/servarr}/qbit/charlie/config:/config
-      - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
-    depends_on:
-      vpn-charlie:
-        condition: service_healthy
-        restart: true
-
-  qbit-delta:
-    <<: *qbit
-    container_name: ${QBIT_DELTA_CNTNR:-qbit-delta}
-    network_mode: "service:vpn-delta"
-    volumes:
-      - ${CNFG_DIR:-/home/administrator/servarr}/qbit/delta/config:/config
-      - ${MNT_DIR:-/home/administrator/downloads}/torrents:/data/torrents
-    depends_on:
-      vpn-delta:
         condition: service_healthy
         restart: true
 
