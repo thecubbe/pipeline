@@ -68,8 +68,8 @@ x-vpn-pf: &vpn_pf
   PORT_FORWARD_ONLY: "true"
   DNS_UPSTREAM_RESOLVER_TYPE: plain
   DNS_UPSTREAM_PLAIN_ADDRESSES: 1.1.1.1:53,9.9.9.9:53
-  VPN_PORT_FORWARDING_UP_COMMAND: "/bin/sh -c 'wget -O- -nv --post-data \"json={\\\"listen_port\\\":{{PORT}},\\\"random_port\\\":false,\\\"upnp\\\":false}\" http://127.0.0.1:8080/api/v2/app/setPreferences'"
-  VPN_PORT_FORWARDING_DOWN_COMMAND: "/bin/sh -c 'wget -O- -nv --post-data \"json={\\\"listen_port\\\":0}\" http://127.0.0.1:8080/api/v2/app/setPreferences'"
+  VPN_PORT_FORWARDING_UP_COMMAND: "/bin/sh -c 'wget -O- -nv --retry-connrefused --post-data \"json={\\\"listen_port\\\":{{PORT}},\\\"random_port\\\":false,\\\"upnp\\\":false}\" http://127.0.0.1:8080/api/v2/app/setPreferences'"
+  VPN_PORT_FORWARDING_DOWN_COMMAND: "/bin/sh -c 'wget -O- -nv --retry-connrefused --post-data \"json={\\\"listen_port\\\":0}\" http://127.0.0.1:8080/api/v2/app/setPreferences'"
 
 x-qbit: &qbit
   <<: *logging
