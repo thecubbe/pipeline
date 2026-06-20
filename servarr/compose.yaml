@@ -48,7 +48,7 @@ x-svc: &svc
 
 x-vpn: &vpn
   <<: *logging
-  image: qmcgaw/gluetun:${VPN_TAG:-v3.40}
+  image: qmcgaw/gluetun:${VPN_TAG:-v3.41.1}
   cap_add:
     - NET_ADMIN
   restart: unless-stopped
@@ -57,6 +57,7 @@ x-vpn: &vpn
   environment: &vpn_env
     VPN_SERVICE_PROVIDER: private internet access
     VPN_TYPE: openvpn
+    UPDATER_PERIOD: 24h
     OPENVPN_USER: ${OPENVPN_USER}
     OPENVPN_PASSWORD: ${OPENVPN_PASSWORD}
     OPENVPN_PROTOCOL: ${VPN_PROTOCOL:-tcp}
