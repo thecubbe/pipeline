@@ -74,7 +74,7 @@ x-vpn-pf: &vpn_pf
 
 x-qbit: &qbit
   <<: *logging
-  image: lscr.io/linuxserver/qbittorrent:${QBITTORRENT_TAG:-5.1.4}
+  image: lscr.io/linuxserver/qbittorrent:${QBITTORRENT_TAG:-5.2.2}
   restart: unless-stopped
   environment:
     PUID: ${PUID:-1000}
