@@ -56,12 +56,12 @@ x-vpn: &vpn
     - servarr
   environment: &vpn_env
     VPN_SERVICE_PROVIDER: private internet access
-    VPN_TYPE: ${VPN_TYPE:-wireguard}
+    VPN_TYPE: ${VPN_TYPE:-openvpn}
     UPDATER_PERIOD: 24h
     OPENVPN_USER: ${OPENVPN_USER}
     OPENVPN_PASSWORD: ${OPENVPN_PASSWORD}
-    OPENVPN_PROTOCOL: ${VPN_PROTOCOL:-tcp}
-    HEALTH_VPN_DURATION_INITIAL: ${HEALTH_VPN_DURATION_INITIAL:-10s}
+    OPENVPN_PROTOCOL: ${VPN_PROTOCOL:-udp}
+    HEALTH_VPN_DURATION_INITIAL: ${HEALTH_VPN_DURATION_INITIAL:-30s}
     TZ: ${TZ}
 
 x-vpn-pf: &vpn_pf
