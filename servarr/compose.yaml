@@ -55,18 +55,15 @@ x-vpn: &vpn
   networks:
     - servarr
   environment: &vpn_env
-    VPN_SERVICE_PROVIDER: private internet access
-    VPN_TYPE: ${VPN_TYPE:-openvpn}
+    VPN_SERVICE_PROVIDER: protonvpn
+    VPN_TYPE: wireguard
     UPDATER_PERIOD: 24h
-    OPENVPN_USER: ${OPENVPN_USER}
-    OPENVPN_PASSWORD: ${OPENVPN_PASSWORD}
-    OPENVPN_PROTOCOL: ${VPN_PROTOCOL:-udp}
     HEALTH_VPN_DURATION_INITIAL: ${HEALTH_VPN_DURATION_INITIAL:-30s}
     TZ: ${TZ}
 
 x-vpn-pf: &vpn_pf
   VPN_PORT_FORWARDING: "on"
-  PORT_FORWARD_ONLY: "true"
+  PORT_FORWARD_ONLY: "on"
   DNS_UPSTREAM_RESOLVER_TYPE: plain
   DNS_UPSTREAM_PLAIN_ADDRESSES: 1.1.1.1:53,9.9.9.9:53
   VPN_PORT_FORWARDING_UP_COMMAND: "/bin/sh -c 'wget -O- -nv --retry-connrefused --post-data \"json={\\\"listen_port\\\":{{PORT}},\\\"random_port\\\":false,\\\"upnp\\\":false}\" http://127.0.0.1:8080/api/v2/app/setPreferences'"
@@ -200,7 +197,8 @@ services:
     container_name: ${VPN_ALPHA_CNTNR:-vpn-alpha}
     environment:
       <<: [*vpn_env, *vpn_pf]
-      SERVER_REGIONS: ${VPN_ALPHA_REGIONS:-Austria,France,Croatia}
+      WIREGUARD_PRIVATE_KEY: ${WG_ALPHA_KEY}
+      SERVER_COUNTRIES: ${VPN_ALPHA_REGIONS:-Austria,France,Croatia}
     ports:
       - "${QBIT_ALPHA_WEBUI_PORT:-8081}:8080"
     volumes:
@@ -211,7 +209,8 @@ services:
     container_name: ${VPN_BRAVO_CNTNR:-vpn-bravo}
     environment:
       <<: [*vpn_env, *vpn_pf]
-      SERVER_REGIONS: ${VPN_BRAVO_REGIONS:-Austria,France,Croatia}
+      WIREGUARD_PRIVATE_KEY: ${WG_BRAVO_KEY}
+      SERVER_COUNTRIES: ${VPN_BRAVO_REGIONS:-Austria,France,Croatia}
     ports:
       - "${QBIT_BRAVO_WEBUI_PORT:-8082}:8080"
     volumes:
@@ -222,7 +221,8 @@ services:
     container_name: ${VPN_CHARLIE_CNTNR:-vpn-charlie}
     environment:
       <<: [*vpn_env, *vpn_pf]
-      SERVER_REGIONS: ${VPN_CHARLIE_REGIONS:-Austria,France,Croatia}
+      WIREGUARD_PRIVATE_KEY: ${WG_CHARLIE_KEY}
+      SERVER_COUNTRIES: ${VPN_CHARLIE_REGIONS:-Austria,France,Croatia}
     ports:
       - "${QBIT_CHARLIE_WEBUI_PORT:-8083}:8080"
     volumes:
@@ -233,7 +233,8 @@ services:
     container_name: ${VPN_DELTA_CNTNR:-vpn-delta}
     environment:
       <<: [*vpn_env, *vpn_pf]
-      SERVER_REGIONS: ${VPN_DELTA_REGIONS:-Austria,France,Croatia}
+      WIREGUARD_PRIVATE_KEY: ${WG_DELTA_KEY}
+      SERVER_COUNTRIES: ${VPN_DELTA_REGIONS:-Austria,France,Croatia}
     ports:
       - "${QBIT_DELTA_WEBUI_PORT:-8084}:8080"
     volumes:
@@ -243,21 +244,16 @@ services:
     <<: *vpn
     container_name: ${VPN_ARR_CNTNR:-vpn-arr}
     environment:
-      VPN_SERVICE_PROVIDER: nordvpn
-      VPN_TYPE: openvpn
-      OPENVPN_USER: ${NORDVPN_USER}
-      OPENVPN_PASSWORD: ${NORDVPN_PASSWORD}
-      OPENVPN_PROTOCOL: ${VPN_PROTOCOL:-tcp}
-      UPDATER_PERIOD: 24h
-      HEALTH_VPN_DURATION_INITIAL: ${HEALTH_VPN_DURATION_INITIAL:-10s}
+      <<: *vpn_env
+      WIREGUARD_PRIVATE_KEY: ${WG_ARR_KEY}
       SERVER_COUNTRIES: ${VPN_ARR_COUNTRIES:-Austria}
       DNS_KEEP_NAMESERVER: "on"
       FIREWALL_OUTBOUND_SUBNETS: ${DOCKER_SUBNET:-172.18.0.0/16}
-      TZ: ${TZ}
     ports:
       - "${RADARR_PORT:-7878}:7878"
       - "${SONARR_PORT:-8989}:8989"
       - "${PROWLARR_PORT:-9696}:9696"
+      - "127.0.0.1:${FLARESOLVERR_PORT:-8191}:8191"
     volumes:
       - ${CNFG_DIR:-/home/administrator/servarr}/vpn/arr:/gluetun
 
@@ -327,23 +323,22 @@ services:
       - ${CNFG_DIR:-/home/administrator/servarr}/qui/config:/config
 
   flaresolverr:
-    <<: *svc
+    <<: *arr
     image: flaresolverr/flaresolverr:${FLARESOLVERR_TAG:-v3.5.0}
     container_name: ${FLARESOLVERR_CNTNR:-flaresolverr}
-    ports:
-      - "127.0.0.1:${FLARESOLVERR_PORT:-8191}:8191"
     environment:
       LOG_LEVEL: ${FS_LOG_LEVEL:-info}
       LOG_HTML: ${FS_LOG_HTML:-false}
       CAPTCHA_SOLVER: ${FS_CAPTCHA_SOLVER:-none}
-      # PROXY_URL: ${FS_PROXY_URL}
-      # PROXY_USERNAME: ${FS_PROXY_USERNAME}
-      # PROXY_PASSWORD: ${FS_PROXY_PASSWORD}
       TZ: ${TZ}
     healthcheck:
       <<: *health
       test: ["CMD", "curl", "-f", "http://localhost:8191/health"]
       start_period: 60s
+    depends_on:
+      vpn-arr:
+        condition: service_healthy
+        restart: true
 
   prowlarr:
     <<: *arr
