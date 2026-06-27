@@ -311,7 +311,7 @@ services:
 
   qui:
     <<: *svc
-    image: ghcr.io/autobrr/qui:${QUI_TAG:-latest}
+    image: ghcr.io/autobrr/qui:${QUI_TAG:-v1.21.0}
     container_name: ${QUI_CNTNR:-qui}
     ports:
       - "${QUI_PORT:-7476}:7476"
