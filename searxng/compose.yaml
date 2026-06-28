@@ -36,7 +36,7 @@ x-vpn: &vpn
 
   searxng:
     <<: *logging
-    image: searxng/searxng:${XNG_TAG:-latest}
+    image: searxng/searxng:${XNG_TAG:-2026.6.28-357662d86}
     container_name: ${XNG_CNTNR:-searxng}
     restart: unless-stopped
     network_mode: "service:vpn-xng"
