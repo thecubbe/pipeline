@@ -1,6 +1,6 @@
 services:
   hawser:
-    image: ghcr.io/finsys/hawser:${TAG:-0.2.39}
+    image: ghcr.io/finsys/hawser:${TAG:-0.2.46}
     container_name: ${CNTNR:-hawser}
     restart: unless-stopped
     ports:
