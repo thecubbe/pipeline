@@ -1,0 +1,65 @@
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+x-vpn: &vpn
+  <<: *logging
+  image: qmcgaw/gluetun:${VPN_TAG:-v3.41.1}
+  cap_add:
+    - NET_ADMIN
+  restart: unless-stopped
+  networks:
+    - searxng
+  environment: &vpn_env
+    VPN_SERVICE_PROVIDER: protonvpn
+    VPN_TYPE: wireguard
+    UPDATER_PERIOD: 24h
+    HEALTH_VPN_DURATION_INITIAL: ${HEALTH_VPN_DURATION_INITIAL:-30s}
+    TZ: ${TZ}
+
+  vpn-xng:
+    <<: *vpn
+    container_name: ${VPN_CNTNR:-searxng-vpn}
+    environment:
+      <<: *vpn_env
+      WIREGUARD_PRIVATE_KEY: ${WG_XNG_KEY}
+      SERVER_COUNTRIES: ${VPN_XNG_COUNTRIES:-Austria}
+      DNS_KEEP_NAMESERVER: "on"
+      FIREWALL_OUTBOUND_SUBNETS: ${DOCKER_SUBNET:-172.22.0.0/16}
+    ports:
+      - "${SEARXNG_PORT:-8080}:8080"
+    volumes:
+      - ${CNFG_DIR:-/home/administrator}/searxng/vpn:/gluetun
+
+  searxng:
+    <<: *logging
+    image: searxng/searxng:${XNG_TAG:-latest}
+    container_name: ${XNG_CNTNR:-searxng}
+    restart: unless-stopped
+    network_mode: "service:vpn-xng"
+    environment:
+      - SEARXNG_BASE_URL=https://${SEARXNG_HOSTNAME}/
+      - UWSGI_WORKERS=${SEARXNG_UWSGI_WORKERS:-4}
+      - UWSGI_THREADS=${SEARXNG_UWSGI_THREADS:-4}        
+    volumes:
+      - ${CNFG_DIR:-/home/administrator}/searxng/data:/etc/searxng:rw
+    # remove for first run then re-enable 
+    # cap_drop: 
+    #   - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    networks:
+      - searxng
+    depends_on:
+      vpn-xng:
+        condition: service_healthy
+        restart: true
+
+networks:
+  searxng:
+    external: true
