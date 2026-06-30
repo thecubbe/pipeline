@@ -5,6 +5,12 @@ x-logging: &logging
       max-size: "10m"
       max-file: "5"
 
+x-health: &health
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 30s
+
 x-vpn: &vpn
   <<: *logging
   image: qmcgaw/gluetun:${VPN_TAG:-v3.41.1}
@@ -20,6 +26,7 @@ x-vpn: &vpn
     HEALTH_VPN_DURATION_INITIAL: ${HEALTH_VPN_DURATION_INITIAL:-30s}
     TZ: ${TZ}
 
+services:
   vpn-xng:
     <<: *vpn
     container_name: ${VPN_CNTNR:-searxng-vpn}
@@ -34,6 +41,28 @@ x-vpn: &vpn
     volumes:
       - ${CNFG_DIR:-/home/administrator}/searxng/vpn:/gluetun
 
+  valkey:
+    <<: *logging
+    image: valkey/valkey:${VALKEY_TAG:-8-alpine}
+    container_name: ${VALKEY_CNTNR:-searxng-valkey}
+    command: valkey-server --save 30 1 --loglevel warning
+    restart: unless-stopped
+    networks:
+      - searxng
+    security_opt:
+      - "no-new-privileges:true"
+    cap_drop:
+      - ALL
+    cap_add:
+      - SETGID
+      - SETUID
+      - DAC_OVERRIDE
+    volumes:
+      - ${CNFG_DIR:-/home/administrator}/searxng/valkey:/data
+    healthcheck:
+      <<: *health
+      test: ["CMD", "valkey-cli", "ping"]
+
   searxng:
     <<: *logging
     image: searxng/searxng:${XNG_TAG:-2026.6.28-357662d86}
@@ -41,24 +70,29 @@ x-vpn: &vpn
     restart: unless-stopped
     network_mode: "service:vpn-xng"
     environment:
-      - SEARXNG_BASE_URL=https://${SEARXNG_HOSTNAME}/
-      - UWSGI_WORKERS=${SEARXNG_UWSGI_WORKERS:-4}
-      - UWSGI_THREADS=${SEARXNG_UWSGI_THREADS:-4}        
+      SEARXNG_BASE_URL: https://${SEARXNG_HOSTNAME}/
+      SEARXNG_VALKEY_URL: valkey://${VALKEY_CNTNR:-searxng-valkey}:6379/0
+      GRANIAN_WORKERS: ${SEARXNG_WORKERS:-4}
+      GRANIAN_BLOCKING_THREADS: ${SEARXNG_THREADS:-4}
     volumes:
       - ${CNFG_DIR:-/home/administrator}/searxng/data:/etc/searxng:rw
-    # remove for first run then re-enable 
-    # cap_drop: 
-    #   - ALL
+      - ${CNFG_DIR:-/home/administrator}/searxng/cache:/var/cache/searxng:rw
+    cap_drop:
+      - ALL
     cap_add:
       - CHOWN
       - SETGID
       - SETUID
-    networks:
-      - searxng
+    healthcheck:
+      <<: *health
+      test: ["CMD", "wget", "-q", "--spider", "--proxy=off", "http://localhost:8080/healthz"]
+      start_period: 60s
     depends_on:
       vpn-xng:
         condition: service_healthy
         restart: true
+      valkey:
+        condition: service_healthy
 
 networks:
   searxng:
