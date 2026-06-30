@@ -84,6 +84,7 @@ services:
       - CHOWN
       - SETGID
       - SETUID
+      - DAC_OVERRIDE
     healthcheck:
       <<: *health
       test: ["CMD", "wget", "-q", "--spider", "--proxy=off", "http://localhost:8080/healthz"]
