@@ -393,7 +393,7 @@ services:
 
   sonarr:
     <<: *arr
-    image: lscr.io/linuxserver/sonarr:${SONARR_TAG:-4.0.17}
+    image: lscr.io/linuxserver/sonarr:${SONARR_TAG:-4.0.19}
     container_name: ${SONARR_CNTNR:-sonarr}
     environment:
       <<: *arr_env
