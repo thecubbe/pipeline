@@ -1,6 +1,6 @@
 services:
   stirling-pdf:
-    image: stirlingtools/stirling-pdf:{TAG:-2.14.2}
+    image: stirlingtools/stirling-pdf:${TAG:-2.14.2}
     container_name: ${CNTNR:-stirling-pdf}
     ports:
       - '${HOST_PORT:-8080}:8080'
