@@ -367,7 +367,7 @@ services:
 
   radarr:
     <<: *arr
-    image: lscr.io/linuxserver/radarr:${RADARR_TAG:-6.2.1}
+    image: lscr.io/linuxserver/radarr:${RADARR_TAG:-6.3.0}
     container_name: ${RADARR_CNTNR:-radarr}
     environment:
       <<: *arr_env
