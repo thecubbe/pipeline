@@ -342,7 +342,7 @@ services:
 
   prowlarr:
     <<: *arr
-    image: lscr.io/linuxserver/prowlarr:${PROWLARR_TAG:-2.4.0}
+    image: lscr.io/linuxserver/prowlarr:${PROWLARR_TAG:-2.5.2}
     container_name: ${PROWLARR_CNTNR:-prowlarr}
     environment:
       <<: *arr_env
