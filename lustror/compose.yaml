@@ -1,0 +1,75 @@
+services:
+  postgres:
+    image: postgres:${POSTGRES_TAG:-18}
+    container_name: ${POSTGRES_CNTNR:-lustror_postgres}
+    restart: always
+    shm_size: ${POSTGRES_SHM:-1gb}
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+      TZ: ${TZ:-Europe/Vienna}
+    ports:
+      - "${POSTGRES_PORT:-127.0.0.1:5432}:5432"
+    volumes:
+      - ${LUSTROR_DIR:-/home/administrator/lustror}/data/postgres:/var/lib/postgresql
+    networks:
+      - lustror
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  lustror:
+    image: ghcr.io/lustrorhq/lustror:${LUSTROR_IMAGE:-latest}
+    container_name: ${LUSTROR_CNTNR:-lustror}
+    restart: always
+    command: ["serve"]
+    ports:
+      - "${HOST_PORT:-127.0.0.1:8443}:8080"
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      LUSTROR_HMAC_KEY: ${LUSTROR_HMAC_KEY}
+      LUSTROR_BIND: "0.0.0.0:8080"
+      LUSTROR_EMBEDDED_WORKER: "off"
+      LUSTROR_TRUST_PROXY: ${LUSTROR_TRUST_PROXY:-1}
+      LUSTROR_OCR_LANGS: ${LUSTROR_OCR_LANGS:-eng}
+      LUSTROR_PDFIUM_PATH: ${LUSTROR_PDFIUM_PATH:-}
+      TZ: ${TZ:-UTC}
+    volumes:
+      - ${LUSTROR_DIR:-/home/administrator/lustror}/data/storage:/var/lib/lustror
+    networks:
+      - lustror
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  worker:
+    image: ghcr.io/lustrorhq/lustror:${LUSTROR_TAG:-latest}
+    container_name: ${LUSTROR_WORKER_CNTNR:-lustror_worker}
+    restart: always
+    command: ["work"]
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      LUSTROR_HMAC_KEY: ${LUSTROR_HMAC_KEY}
+      LUSTROR_OCR_LANGS: ${LUSTROR_OCR_LANGS:-eng}
+      LUSTROR_PDFIUM_PATH: ${LUSTROR_PDFIUM_PATH:-}
+      TZ: ${TZ:-UTC}
+    volumes:
+      - ${LUSTROR_DIR:-/home/administrator/lustror}/data/storage:/var/lib/lustror
+    networks:
+      - lustror
+    depends_on:
+      lustror:
+        condition: service_healthy
+
+networks:
+  lustror:
+    external: true
