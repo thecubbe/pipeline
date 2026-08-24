@@ -34,8 +34,6 @@ services:
       LUSTROR_BIND: "0.0.0.0:8080"
       LUSTROR_EMBEDDED_WORKER: "off"
       LUSTROR_TRUST_PROXY: ${LUSTROR_TRUST_PROXY:-1}
-      LUSTROR_OCR_LANGS: ${LUSTROR_OCR_LANGS:-eng}
-      LUSTROR_PDFIUM_PATH: ${LUSTROR_PDFIUM_PATH:-}
       TZ: ${TZ:-UTC}
     volumes:
       - ${LUSTROR_DIR:-/home/administrator/lustror}/data/storage:/var/lib/lustror
@@ -59,8 +57,6 @@ services:
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       LUSTROR_HMAC_KEY: ${LUSTROR_HMAC_KEY}
-      LUSTROR_OCR_LANGS: ${LUSTROR_OCR_LANGS:-eng}
-      LUSTROR_PDFIUM_PATH: ${LUSTROR_PDFIUM_PATH:-}
       TZ: ${TZ:-UTC}
     volumes:
       - ${LUSTROR_DIR:-/home/administrator/lustror}/data/storage:/var/lib/lustror
