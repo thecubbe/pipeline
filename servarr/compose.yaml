@@ -48,7 +48,7 @@ x-svc: &svc
 
 x-vpn: &vpn
   <<: *logging
-  image: qmcgaw/gluetun:${VPN_TAG:-v3.41.1}
+  image: qmcgaw/gluetun:${VPN_TAG:-v3.41.3}
   cap_add:
     - NET_ADMIN
   restart: unless-stopped
@@ -71,7 +71,7 @@ x-vpn-pf: &vpn_pf
 
 x-qbit: &qbit
   <<: *logging
-  image: lscr.io/linuxserver/qbittorrent:${QBITTORRENT_TAG:-5.2.2}
+  image: lscr.io/linuxserver/qbittorrent:${QBITTORRENT_TAG:-5.2.3}
   restart: unless-stopped
   environment:
     PUID: ${PUID:-1000}
@@ -167,7 +167,7 @@ services:
 
   pgadmin:
     <<: *svc
-    image: dpage/pgadmin4:${PGADMIN_TAG:-9.16}
+    image: dpage/pgadmin4:${PGADMIN_TAG:-9.17}
     container_name: ${PGADMIN_CNTNR:-pgadmin}
     security_opt: []
     ports:
@@ -311,7 +311,7 @@ services:
 
   qui:
     <<: *svc
-    image: ghcr.io/autobrr/qui:${QUI_TAG:-v1.22.0}
+    image: ghcr.io/autobrr/qui:${QUI_TAG:-v1.27.0}
     container_name: ${QUI_CNTNR:-qui}
     ports:
       - "${QUI_PORT:-7476}:7476"
