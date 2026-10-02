@@ -71,7 +71,7 @@ x-vpn-pf: &vpn_pf
 
 x-qbit: &qbit
   <<: *logging
-  image: lscr.io/linuxserver/qbittorrent:${QBITTORRENT_TAG:-5.2.3}
+  image: lscr.io/linuxserver/qbittorrent:${QBITTORRENT_TAG:-5.2.4}
   restart: unless-stopped
   environment:
     PUID: ${PUID:-1000}
@@ -324,7 +324,7 @@ services:
 
   flaresolverr:
     <<: *arr
-    image: flaresolverr/flaresolverr:${FLARESOLVERR_TAG:-v3.5.0}
+    image: flaresolverr/flaresolverr:${FLARESOLVERR_TAG:-v3.5.2}
     container_name: ${FLARESOLVERR_CNTNR:-flaresolverr}
     environment:
       LOG_LEVEL: ${FS_LOG_LEVEL:-info}
@@ -342,7 +342,7 @@ services:
 
   prowlarr:
     <<: *arr
-    image: lscr.io/linuxserver/prowlarr:${PROWLARR_TAG:-2.5.2}
+    image: lscr.io/linuxserver/prowlarr:${PROWLARR_TAG:-2.6.5}
     container_name: ${PROWLARR_CNTNR:-prowlarr}
     environment:
       <<: *arr_env
@@ -367,7 +367,7 @@ services:
 
   radarr:
     <<: *arr
-    image: lscr.io/linuxserver/radarr:${RADARR_TAG:-6.3.0}
+    image: lscr.io/linuxserver/radarr:${RADARR_TAG:-6.4.4}
     container_name: ${RADARR_CNTNR:-radarr}
     environment:
       <<: *arr_env
@@ -393,7 +393,7 @@ services:
 
   sonarr:
     <<: *arr
-    image: lscr.io/linuxserver/sonarr:${SONARR_TAG:-4.0.19}
+    image: lscr.io/linuxserver/sonarr:${SONARR_TAG:-4.0.20}
     container_name: ${SONARR_CNTNR:-sonarr}
     environment:
       <<: *arr_env
@@ -419,7 +419,7 @@ services:
 
   seerr:
     <<: *svc
-    image: ghcr.io/seerr-team/seerr:${SEERR_TAG:-v3.4.1}
+    image: ghcr.io/seerr-team/seerr:${SEERR_TAG:-v3.5.0}
     container_name: ${SEERR_CNTNR:-seerr}
     init: true
     ports:
