@@ -1,0 +1,21 @@
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+services:
+  coolercontrold:
+    <<: *logging
+    image: coolercontrol/coolercontrold:${TAG:-latest}
+    container_name: ${CNTNR:-coolercontrold}
+    restart: unless-stopped
+    privileged: ${PRIVILEGED:-false}
+    environment:
+      TZ: ${TZ:-Europe/Vienna}
+    ports:
+      - "${HOST_PORT:-11987}:11987"
+    volumes:
+      - ${CC_DIR:-/home/administrator/coolercontrol}/config:/etc/coolercontrol
+      - ${CC_DIR:-/home/administrator/coolercontrol}/sensors:/sensors:ro
