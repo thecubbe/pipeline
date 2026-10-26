@@ -1,6 +1,6 @@
 services:
   qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:${TAG:-5.1.4}
+    image: lscr.io/linuxserver/qbittorrent:${TAG:-5.3.0}
     container_name: ${CNTNR:-qbittorrent}
     restart: unless-stopped
     ports:
