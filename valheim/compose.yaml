@@ -24,8 +24,6 @@ services:
       - "no-new-privileges:true"
     networks:
       - valheim
-    ports:
-      - "${VALHEIM_PORT:-2456}-${VALHEIM_PORT_END:-2458}:${VALHEIM_PORT:-2456}-${VALHEIM_PORT_END:-2458}/udp"
     environment:
       PUID: ${PUID:-1000}
       PGID: ${PGID:-1000}
@@ -33,10 +31,9 @@ services:
       SERVER_NAME: ${VALHEIM_SERVER_NAME}
       WORLD_NAME: ${VALHEIM_WORLD_NAME}
       SERVER_PASS: ${VALHEIM_SERVER_PASS}
-      SERVER_PORT: ${VALHEIM_PORT:-2456}
-      SERVER_PUBLIC: ${VALHEIM_PUBLIC:-false}
+      SERVER_PUBLIC: ${VALHEIM_PUBLIC:-true}
       SERVER_ARGS: ${VALHEIM_SERVER_ARGS:-}
-      CROSSPLAY: ${VALHEIM_CROSSPLAY:-false}
+      CROSSPLAY: ${VALHEIM_CROSSPLAY:-true}
       ADMINLIST_IDS: ${VALHEIM_ADMINLIST_IDS:-}
       BACKUPS_MAX_AGE: ${VALHEIM_BACKUPS_MAX_AGE:-3}
     volumes:
