@@ -1,0 +1,56 @@
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "5"
+
+x-health: &health
+  interval: 30s
+  timeout: 10s
+  retries: 3
+  start_period: 30s
+
+services:
+  valheim:
+    <<: *logging
+    image: ghcr.io/community-valheim-tools/valheim-server:${VALHEIM_TAG:-1.4.1}
+    container_name: ${VALHEIM_CNTNR:-valheim}
+    restart: unless-stopped
+    stop_grace_period: 2m
+    cap_add:
+      - SYS_NICE
+    security_opt:
+      - "no-new-privileges:true"
+    networks:
+      - valheim
+    ports:
+      - "${VALHEIM_PORT:-2456}-${VALHEIM_PORT_END:-2458}:${VALHEIM_PORT:-2456}-${VALHEIM_PORT_END:-2458}/udp"
+    environment:
+      PUID: ${PUID:-1000}
+      PGID: ${PGID:-1000}
+      TZ: ${TZ}
+      SERVER_NAME: ${VALHEIM_SERVER_NAME}
+      WORLD_NAME: ${VALHEIM_WORLD_NAME}
+      SERVER_PASS: ${VALHEIM_SERVER_PASS}
+      SERVER_PORT: ${VALHEIM_PORT:-2456}
+      SERVER_PUBLIC: ${VALHEIM_PUBLIC:-false}
+      SERVER_ARGS: ${VALHEIM_SERVER_ARGS:-}
+      CROSSPLAY: ${VALHEIM_CROSSPLAY:-false}
+      ADMINLIST_IDS: ${VALHEIM_ADMINLIST_IDS:-}
+      BACKUPS_MAX_AGE: ${VALHEIM_BACKUPS_MAX_AGE:-3}
+    volumes:
+      - ${CNFG_DIR:-/home/administrator}/valheim/config:/config
+      - ${CNFG_DIR:-/home/administrator}/valheim/data:/opt/valheim
+    deploy:
+      resources:
+        limits:
+          memory: ${VALHEIM_MEMORY_LIMIT:-8192M}
+    healthcheck:
+      <<: *health
+      test: ["CMD-SHELL", "supervisorctl status valheim-server | grep -q RUNNING"]
+      start_period: 10m
+
+networks:
+  valheim:
+    external: true
